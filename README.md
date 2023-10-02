@@ -1,2 +1,2 @@
 # Qinee
-A Blockchain Project
+A test project for solidity
