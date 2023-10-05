@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
-import "./Storage.sol";
+import "../DataStorage.sol";
 
-contract EventVote is Storage{
+contract EventVote is DataStorage{
     // mapping(bytes32 => mapping(address => bool)) eventVotes;
     function vote(string memory _eventName) internal {
         bytes32 name = keccak256(abi.encodePacked(_eventName));

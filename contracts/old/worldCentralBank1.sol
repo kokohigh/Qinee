@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
+import "../CentralBank.sol";
+
 
 //The contract of WCB
 contract WorldCentralBank{
 
     mapping(address => bool) members;
     event logCentralBank(CentralBank);
-    //event logLetterofcredit(LetterOfCredit);
+    event logLetterofcredit(LetterOfCredit);
     event logCollection(Collection);
     event logRemittance(Remittance);
 
@@ -47,7 +49,7 @@ contract WorldCentralBank{
 
 
 //The contract of country's central bank
-contract CentralBank {
+contract CentralBank2 {
     address Owner;
 
     constructor(address _addr){
@@ -86,23 +88,23 @@ contract CentralBank {
 }
 
 
-// The contract of LoC
-// contract LetterOfCredit{
+//The contract of LoC
+contract LetterOfCredit2{
 
-//     address IMPORTER;
-//     address EXPORTER;
+    address IMPORTER;
+    address EXPORTER;
 
-//     constructor(){
+    constructor(){
 
-//     }
+    }
 
-//     function LoC() external {
-//         return 0;
-//     }
-// }
+    function LoC() external pure returns(uint){
+        return 0;
+    }
+}
 
 // The contract of Collection
-contract Collection{
+contract Collection2{
 
     address IMPORTER;
     address EXPORTER;
@@ -123,7 +125,7 @@ contract Collection{
 }
 
 // The contract of Remittance
-contract Remittance{
+contract Remittance2{
 
     address payable TO;
 

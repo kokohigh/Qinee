@@ -1,16 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-contract RemittanceFactor{
-    Remittance remittance;
-    event logRemittance(Remittance indexed remittance, address indexed receiver);
-    
-    function createRemittance(address _to) public payable{
-        remittance = new Remittance{value:msg.value}(_to);
-        emit logRemittance(remittance, _to);
-    }
-}
-
 contract Remittance{
 
     address payable TO;
@@ -31,4 +21,14 @@ contract Remittance{
         TO.transfer(_v);
     }
 
+}
+
+contract RemittanceFactor{
+    Remittance remittance;
+    event logRemittance(Remittance indexed remittance, address indexed receiver);
+    
+    function createRemittance(address _to) public payable{
+        remittance = new Remittance{value:msg.value}(_to);
+        emit logRemittance(remittance, _to);
+    }
 }

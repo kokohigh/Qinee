@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "./Storage.sol";
+import "../DataStorage.sol";
 
-contract Participants is Storage{
+contract Participants is DataStorage{
     // address[] public participants;
     // mapping(address => bool) isJoined;
 
