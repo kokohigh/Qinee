@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
-import "./StandardFunctionsSet/Remittance.sol";
+import "./StandardFunctionsSet/StandardFunctions.sol";
 import "./DataStorage.sol";
 
 //The contract of country's central bank
@@ -21,18 +21,22 @@ contract CentralBank {
         return Owner;
     }
 
-    // function createLetterOfCredit(address _addr) external ownerOnly{
-    //     WorldCentralBank(_addr).createLetterOfCredit();
-    // }
 
-    // function createCollection(address _addr) external ownerOnly{
-    //     WorldCentralBank(_addr).createCollection();
-        
-    // }
+
+
 
     function createRemittance(address _rem, address _to) public payable ownerOnly{
         RemittanceFactor(_rem).createRemittance(_to);
         //_wcb.transfer(address(this).address);
+    }
+
+    function createCollection(address _coll, address _ex, address _im, uint _amount) external ownerOnly{
+        CollectionFactor(_coll).createCollection(_ex, _im, _amount);
+        
+    }
+
+    function createLetterOfCredit(address _loc,address _ex, address _im) external ownerOnly{
+        LetterOfCreditFactor(_loc).createLetterOfCredit(_ex, _im);
     }
 
 
