@@ -16,7 +16,7 @@ contract Vote {
         uint256 _over,
         address _dsAddr
     ) {
-        name = keccak256(abi.encodePacked(_name));
+        name = keccak256(abi.encodePacked(_name, _start, _over));
         startTime = _start;
         overTime = _over;
         dataStorage = DataStorage(_dsAddr);
@@ -63,6 +63,10 @@ contract Vote {
         } else {
             return false;
         }
+    }
+
+    function getName() external view returns (bytes32) {
+        return name;
     }
 }
 

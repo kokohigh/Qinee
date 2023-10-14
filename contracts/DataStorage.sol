@@ -8,7 +8,7 @@ contract DataStorage {
     mapping(address => bool) isOwner;
 
     //VersionController
-    //当前的WCB的地址
+    //当前的WCB的地址,各种交易类型的版本
     mapping(address => bool) version;
 
     //Owner和Member的区别为以后将更多主体纳入系统预留了空间
@@ -48,8 +48,9 @@ contract DataStorage {
     }
 
     //Version的方法
-    function updateVersion(address _newVersion) external {
-        version = _newVersion;
+    function updateVersion(address _oldVersion, address _newVersion) external {
+        version[_newVersion] = true;
+        version[_oldVersion] = false;
         emit logUpdateVersion(block.timestamp, _newVersion);
     }
 
