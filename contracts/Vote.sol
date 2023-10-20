@@ -11,12 +11,14 @@ contract Vote {
     DataStorage dataStorage;
 
     constructor(
-        string memory _name,
-        uint256 _start,
+        string memory _name, // 各种事件类型(What)
+        address _addr, // user'address OR version'address(Who)
+        uint _amount, // amount of currency, perpare for future.(How much)
+        uint256 _start, //投票的有效期(When)
         uint256 _over,
         address _dsAddr
     ) {
-        name = keccak256(abi.encodePacked(_name, _start, _over));
+        name = keccak256(abi.encodePacked(_name, _addr, _amount,  _start, _over));
         startTime = _start;
         overTime = _over;
         dataStorage = DataStorage(_dsAddr);
@@ -76,11 +78,13 @@ contract VoteFactor {
 
     function createVote(
         string memory _name,
+        address _addr, // user'address OR version'address
+        uint _amount, // amount of currency, perpare for future.
         uint256 _start,
         uint256 _over,
         address _ds
     ) external {
-        v = new Vote(_name, _start, _over, _ds);
+        v = new Vote(_name, _addr, _amount, _start, _over, _ds);
         emit logVote(_name, _start, _over);
     }
 }

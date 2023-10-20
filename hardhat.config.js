@@ -7,7 +7,7 @@ module.exports = {
     localhost:{
       url:'HTTP://127.0.0.1:7545',
       accounts: [
-        `0x615d9487341775269de2265aa5b1b8c8caa12ced7de47449ab4c0760274f0fb5`,
+        `16bce92e23b084453dacec396d2a2c9af3cca30027de9eec9198895748279999`,
       ],
     }
   }

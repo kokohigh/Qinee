@@ -106,7 +106,6 @@ contract CentralBank {
 contract CentralBankFactory {
     CentralBank centralbank;
     DataStorage dataStorage;
-    CentralBank[] centralbanks;
 
     constructor(address _ds) {
         dataStorage = DataStorage(_ds);

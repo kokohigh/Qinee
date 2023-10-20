@@ -10,16 +10,19 @@ contract Collection {
     address payable owner;
     address importer;
     uint amount;
+    address immutable VERSION;
 
     //bool condition;
     constructor(
         address _ex,
         address _im,
-        uint _amount
+        uint _amount,
+        address _version
     ) {
         owner = payable(_ex);
         importer = _im;
         amount = _amount;
+        VERSION = _version;
     }
 
     modifier checkAmount() {
@@ -47,6 +50,8 @@ contract Collection {
 
 contract CollectionFactor {
     Collection collection;
+    address immutable VERSION = address(this); //工厂版本
+    
     event logCollection(
         Collection indexed collection,
         address owner,
@@ -59,7 +64,7 @@ contract CollectionFactor {
         address _im,
         uint _amount
     ) public payable {
-        collection = new Collection(_ex, _im, _amount);
+        collection = new Collection(_ex, _im, _amount, VERSION);
         emit logCollection(collection, _ex, _im, _amount);
     }
 }

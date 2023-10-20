@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 import "./CentralBank.sol";
+import "./Vote.sol";
 
 contract DataStorage {
     // Ownership
@@ -22,6 +23,9 @@ contract DataStorage {
 
     CentralBank[] centralBanks;
 
+    uint constant ZERO = 0;
+    string constant ADDOWNER = "ADDOWNER";
+
     event logUpdateVersion(uint timestamp, address newVersion);
 
     constructor(address[] memory _owners) {
@@ -36,14 +40,36 @@ contract DataStorage {
         _;
     }
 
+    modifier passOnly(
+        address _vote,
+        string memory _name,
+        address _addr,
+        uint _amount,
+        uint _start,
+        uint _over
+    ) {
+        Vote vote = Vote(_vote);
+        require(
+            vote.getName() == keccak256(abi.encodePacked(_name, _addr, _amount, _start, _over)),
+            "Not this proposal."
+        );
+        require(vote.checkPass(), "Not pass.");
+        _;
+    }
+
     //Ownership的方法
-    function addOwner(address _addr) external {
+    function addOwner(
+        address _voteAddr,
+        address _addr,
+        uint _start,
+        uint _over
+    ) external passOnly(_voteAddr, ADDOWNER, _addr, ZERO , _start, _over) {
         owners.push(_addr);
     }
 
     function deleteOwner(address _addr) external {}
 
-    function checkOwner(address _addr) external view returns (bool){
+    function checkOwner(address _addr) external view returns (bool) {
         return isOwner[_addr];
     }
 
@@ -54,7 +80,7 @@ contract DataStorage {
         emit logUpdateVersion(block.timestamp, _newVersion);
     }
 
-    function checkVersion(address _addr) external returns (bool) {
+    function checkVersion(address _addr) external view returns (bool) {
         return version[_addr];
     }
 
@@ -64,6 +90,7 @@ contract DataStorage {
     }
 
     function addMember(address _uaddr) external {
+        members.push(_uaddr);
         isMember[_uaddr] = true;
     }
 
@@ -83,8 +110,8 @@ contract DataStorage {
         addr = members[_index];
     }
 
-    function getCBLength() external view returns (uint l) {
-        l = members.length;
+    function getCBLength() external view returns (uint) {
+        return members.length;
     }
 
     // function checkVote(bytes32 _name, address _uaddr)

@@ -5,19 +5,34 @@ pragma solidity ^0.8.0;
 //信用证是银行（即开证行）依照进口商（即开证申请人）的要求和指示，对出口商（即受益人）发出的、
 //授权进口商签发以银行或进口商为付款人的汇票，保证在将来符合信用证条款规定的汇票和单据时，必定承兑和付款的保证文件。
 contract LetterOfCredit {
+    uint256 deadline;
     bool condition;
-    address owner;
+    address payable owner;
     address payable exporter;
     address oracle;
+    address immutable VERSION;
 
-    constructor(address _ex, address _im, address _oracle) payable {
-        owner = _im;
+    constructor(
+        address _ex,
+        address _im,
+        address _oracle,
+        uint _ddl,
+        address _version
+    ) payable {
+        owner = payable(_im);
         exporter = payable(_ex);
         oracle = _oracle;
+        deadline = _ddl;
+        VERSION = _version;
     }
 
     modifier beneficiaryOnly() {
         require(msg.sender == exporter, "Error: You are not the beneficiary.");
+        _;
+    }
+
+    modifier ownerOnly(){
+        require(msg.sender == owner, "No Permission");
         _;
     }
 
@@ -29,29 +44,51 @@ contract LetterOfCredit {
         _;
     }
 
-    modifier oracleOnly(){
+    modifier unfinishOnly() {
+        require((block.timestamp > deadline) && (condition == false), "Transaction is pedding");
+        _;
+    }
+
+    modifier oracleOnly() {
         require(msg.sender == oracle, "No permission to change status");
         _;
     }
 
     receive() external payable {}
 
-    function setCondition(bool _finished) public oracleOnly{
+    // Oracle用于改变交易状态
+    function setCondition(bool _finished) public oracleOnly {
         condition = _finished;
     }
 
-    function getValue() external view returns (uint) {
-        return address(this).balance;
+    // 延长DDL
+    function extendDeadline(uint256 _newTime) external {
+        require(msg.sender == owner, "No permission.");
+        require(_newTime > deadline, "Cannot shorten time.");
+        deadline = _newTime;
     }
 
+    // 达成条件时，出口商提款
     function withdraw(uint _v) external beneficiaryOnly finishedOnly {
         require(_v <= address(this).balance, "Insufficient balance.");
         exporter.transfer(_v);
+    }
+
+    //交易失败时，退款给进口商
+    function cancel() external ownerOnly unfinishOnly{
+        owner.transfer(address(this).balance);
+    }
+
+    //查看合约中的代币数量
+    function getValue() external view returns (uint) {
+        return address(this).balance;
     }
 }
 
 contract LetterOfCreditFactor {
     LetterOfCredit letterOfCredit;
+    address immutable VERSION = address(this); //工厂版本
+
     event logLetterOfFactor(
         LetterOfCredit indexed letterOfCredit,
         address _ex,
@@ -59,8 +96,19 @@ contract LetterOfCreditFactor {
         uint amount
     );
 
-    function createLetterOfCredit(address _ex, address _im, address _oracle) public payable {
-        letterOfCredit = new LetterOfCredit{value: msg.value}(_ex, _im, _oracle);
+    function createLetterOfCredit(
+        address _ex,
+        address _im,
+        address _oracle,
+        uint _ddl
+    ) public payable {
+        letterOfCredit = new LetterOfCredit{value: msg.value}(
+            _ex,
+            _im,
+            _oracle,
+            _ddl,
+            VERSION
+        );
         emit logLetterOfFactor(letterOfCredit, _ex, _im, msg.value);
     }
 }
