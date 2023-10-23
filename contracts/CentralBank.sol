@@ -30,18 +30,17 @@ contract CentralBank {
         payable
         ownerOnly
     {
-        RemittanceFactor(_rem).createRemittance{value: msg.value}(_to);
+        RemittanceFactor(_rem).createRemittance{value: msg.value}(Owner, _to);
         //_wcb.transfer(address(this).address);
     }
 
     function createCollection(
         address _coll,
-        address _ex,
         address _im,
         uint _amount
     ) external payable ownerOnly {
         CollectionFactor(_coll).createCollection{value: msg.value}(
-            _ex,
+            Owner,
             _im,
             _amount
         );
@@ -50,13 +49,14 @@ contract CentralBank {
     function createLetterOfCredit(
         address _loc,
         address _ex,
-        address _im,
-        address _oracle
+        address _oracle,
+        uint _ddl
     ) external payable ownerOnly {
         LetterOfCreditFactor(_loc).createLetterOfCredit{value: msg.value}(
             _ex,
-            _im,
-            _oracle
+            Owner,
+            _oracle,
+            _ddl
         );
     }
 

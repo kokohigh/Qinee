@@ -35,23 +35,41 @@ contract Collection {
         _;
     }
 
+    modifier ownerOnly() {
+        require(msg.sender == owner, "You are not the Owner.");
+        _;
+    }
+
+    modifier relevantOnly() {
+        require(msg.sender == owner || msg.sender == importer, "You are not relevant person.");
+        _;
+    }
+
     //向合约付款
     receive() external payable checkAmount importerOnly {}
 
-    function getValue() external view returns (uint) {
+    function getValue() external view relevantOnly returns (uint) {
         return address(this).balance;
     }
 
-    function withdraw(uint _v) external {
+    function getAmount() external view relevantOnly returns(uint){
+        return amount;
+    }
+
+    function withdraw(uint _v) external ownerOnly{
         require(_v <= address(this).balance, "Insufficient balance.");
         owner.transfer(_v);
+    }
+
+    function checkVersion() view external returns(address) {
+        return VERSION;
     }
 }
 
 contract CollectionFactor {
     Collection collection;
     address immutable VERSION = address(this); //工厂版本
-    
+
     event logCollection(
         Collection indexed collection,
         address owner,

@@ -18,12 +18,12 @@ contract WorldCentralBank {
         _;
     }
 
-    function createCentralBank(address _CBFactory, address _owner) external {
+    function createCentralBank(address _CBFactory) external {
         require(
             dataStorage.checkMember(msg.sender) == false,
             "Already initialed the central bank."
         );
-        CentralBankFactory(_CBFactory).creatCentralBank(_owner);
+        CentralBankFactory(_CBFactory).creatCentralBank(msg.sender);
         dataStorage.addMember(msg.sender);
     }
 
@@ -45,5 +45,9 @@ contract WorldCentralBank {
 
     function checkDataStoage() view external returns(address, DataStorage){
         return (address(dataStorage), dataStorage);
+    }
+
+    function checkCentralBank() view external returns (address){
+        return address(this);// TODO
     }
 }

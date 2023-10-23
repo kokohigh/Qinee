@@ -7,8 +7,8 @@ pragma solidity ^0.8.0;
 contract LetterOfCredit {
     uint256 deadline;
     bool condition;
-    address payable owner;
-    address payable exporter;
+    address payable immutable owner;
+    address payable immutable exporter;
     address oracle;
     address immutable VERSION;
 
@@ -33,6 +33,11 @@ contract LetterOfCredit {
 
     modifier ownerOnly(){
         require(msg.sender == owner, "No Permission");
+        _;
+    }
+
+    modifier relevantOnly(){
+        require(msg.sender == exporter || msg.sender == owner, "Not relevant person.");
         _;
     }
 
@@ -62,16 +67,16 @@ contract LetterOfCredit {
     }
 
     // 延长DDL
-    function extendDeadline(uint256 _newTime) external {
+    function extendDeadline(uint256 _newTime) external ownerOnly{
         require(msg.sender == owner, "No permission.");
         require(_newTime > deadline, "Cannot shorten time.");
         deadline = _newTime;
     }
 
     // 达成条件时，出口商提款
-    function withdraw(uint _v) external beneficiaryOnly finishedOnly {
-        require(_v <= address(this).balance, "Insufficient balance.");
-        exporter.transfer(_v);
+    function withdraw() external beneficiaryOnly finishedOnly {
+        //require(_v <= address(this).balance, "Insufficient balance.");
+        exporter.transfer(address(this).balance);
     }
 
     //交易失败时，退款给进口商
@@ -80,8 +85,16 @@ contract LetterOfCredit {
     }
 
     //查看合约中的代币数量
-    function getValue() external view returns (uint) {
+    function getValue() external view relevantOnly returns (uint) {
         return address(this).balance;
+    }
+
+    function checkVersion() external view returns (address) {
+        return VERSION;
+    }
+
+    function checkDeadline() external view relevantOnly returns (uint) {
+        return deadline;
     }
 }
 

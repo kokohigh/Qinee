@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 contract Remittance {
     address immutable FROM;
-    address payable TO;
+    address payable immutable TO;
     address immutable internal version;
 
     // 只有受益人可以提款
@@ -17,15 +17,15 @@ contract Remittance {
         _;
     }
 
-    constructor(address _to, address _version) payable {
+    constructor(address _from, address _to, address _version) payable {
         TO = payable(_to);
-        FROM = msg.sender;
+        FROM = _from;
         version = _version;
     }
 
     receive() external payable {}
 
-    function getValue() external view returns (uint) {
+    function getValue() external view relevantOnly returns (uint) {
         return address(this).balance;
     }
 
@@ -48,8 +48,8 @@ contract RemittanceFactor {
         address indexed receiver
     );
 
-    function createRemittance(address _to) public payable {
-        remittance = new Remittance{value: msg.value}(_to, VERSION);
+    function createRemittance(address _from, address _to) public payable {
+        remittance = new Remittance{value: msg.value}(_from, _to, VERSION);
         emit logRemittance(remittance, _to);
     }
 }
