@@ -1,27 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
-import "./CentralBank.sol";
 import "./Vote.sol";
 
 contract DataStorage {
-    // Ownership
-    address[] internal owners;
-    mapping(address => bool) isOwner;
-
     //VersionController
     //当前的WCB的地址,各种交易类型的版本
     mapping(address => bool) version;
 
-    //Owner和Member的区别为以后将更多主体纳入系统预留了空间
-    //目前两者一致
+    // Ownership 对应于 CentralBank
+    address[] internal owners;
+    mapping(address => bool) isOwner;
+
+    // Member 对应于 BusinessAccount
     address[] public members;
     mapping(address => bool) isMember;
 
-    //投票功能被作为单独的功能分离
-    //为每一个投票事件单独创建智能合约
-    //mapping(bytes32 => mapping(address => bool)) eventVotes;
+    // Central Banks
+    address[] centralBanks;
+    mapping(address => bool) isCentralBank;
+    //mapping(address => address) cbOfCountry;
 
-    CentralBank[] centralBanks;
+    // Business Accounts
+    address[] businessAccounts;
+    mapping(address => bool) isBusinessAccount;
 
     uint constant ZERO = 0;
     string constant ADDOWNER = "ADDOWNER";
@@ -57,7 +58,22 @@ contract DataStorage {
         _;
     }
 
-    //Ownership的方法
+    // Version的方法
+    function updateVersion(address _oldVersion, address _newVersion) external {
+        version[_newVersion] = true;
+        version[_oldVersion] = false;
+        emit logUpdateVersion(block.timestamp, _newVersion);
+    }
+
+    function addVersion(address _version) external {
+        version[_version] =true;
+    }
+
+    function checkVersion(address _addr) external view returns (bool) {
+        return version[_addr];
+    }
+
+    // Ownership的方法
     function addOwner(
         address _voteAddr,
         address _addr,
@@ -73,52 +89,46 @@ contract DataStorage {
         return isOwner[_addr];
     }
 
-    //Version的方法
-    function updateVersion(address _oldVersion, address _newVersion) external {
-        version[_newVersion] = true;
-        version[_oldVersion] = false;
-        emit logUpdateVersion(block.timestamp, _newVersion);
-    }
-
-    function checkVersion(address _addr) external view returns (bool) {
-        return version[_addr];
-    }
-
-    //写一些关于数据操作的方法
-    function addCentralBank(CentralBank _addr) external {
+    // 关于中央银行的方法
+    function addCentralBank(address _addr) external {
         centralBanks.push(_addr);
+        isCentralBank[_addr] = true;
     }
 
+    function checkCentralBank(address _addr) external view returns (bool) {
+        return isCentralBank[_addr];
+    }
+
+    // 关于membership的方法
     function addMember(address _uaddr) external {
         members.push(_uaddr);
         isMember[_uaddr] = true;
     }
 
-    // function vote(bytes32 _name, address _uaddr) external {
-    //     eventVotes[_name][_uaddr] = true;
-    // }
-
-    // function revocation(bytes32 _name, address _uaddr) external {
-    //     eventVotes[_name][_uaddr] = false;
-    // }
-
     function checkMember(address _uaddr) external view returns (bool) {
         return isMember[_uaddr];
     }
 
+    // 关于商业账户的方法
+    function addBusinessAccount(address _addr) external {
+        businessAccounts.push(_addr);
+        isBusinessAccount[_addr] = true;
+    }
+
+    function checkParticipants(address _addr) external view returns (bool) {
+        return (isCentralBank[_addr] || isBusinessAccount[_addr]);
+    }
+
+    // 关于投票和央行的方法
     function getCBAddr(uint _index) external view returns (address addr) {
-        addr = members[_index];
+        addr = centralBanks[_index];
     }
 
     function getCBLength() external view returns (uint) {
-        return members.length;
+        return centralBanks.length;
     }
 
-    // function checkVote(bytes32 _name, address _uaddr)
-    //     external
-    //     view
-    //     returns (bool)
-    // {
-    //     return eventVotes[_name][_uaddr];
-    // }
+    function listCB() external view returns (address[] memory){
+        return centralBanks;
+    }
 }

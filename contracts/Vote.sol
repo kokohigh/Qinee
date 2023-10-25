@@ -16,12 +16,14 @@ contract Vote {
         uint _amount, // amount of currency, perpare for future.(How much)
         uint256 _start, //投票的有效期(When)
         uint256 _over,
-        address _dsAddr
+        address _ds
     ) {
-        name = keccak256(abi.encodePacked(_name, _addr, _amount,  _start, _over));
+        name = keccak256(
+            abi.encodePacked(_name, _addr, _amount, _start, _over)
+        );
         startTime = _start;
         overTime = _over;
-        dataStorage = DataStorage(_dsAddr);
+        dataStorage = DataStorage(_ds);
     }
 
     //为投票设置有效期
@@ -41,12 +43,17 @@ contract Vote {
         _;
     }
 
-    function affirmativeVote() external validatyOnly OwnerOnly {
-        voteStatus[msg.sender] = true;
+    modifier CBOnly(address _addr) {
+        require(dataStorage.checkCentralBank(_addr), "No Permission.");
+        _;
     }
 
-    function dissentingVote() external validatyOnly OwnerOnly {
-        voteStatus[msg.sender] = false;
+    function affirmativeVote() external validatyOnly CBOnly(msg.sender) {
+        voteStatus[msg.sender] = true; //msg.sender 是一个CB的地址
+    }
+
+    function dissentingVote() external validatyOnly CBOnly(msg.sender) {
+        voteStatus[msg.sender] = false; //msg.sender 是一个CB的地址
     }
 
     //TODO 完成datastorage的重写后
@@ -75,6 +82,20 @@ contract Vote {
 contract VoteFactor {
     Vote v;
     event logVote(string indexed name, uint256 startTime, uint256 overTime);
+    address WCB;
+
+    modifier WCBOnly() {
+        require(
+            msg.sender == WCB,
+            "please create central bank via World Central Bank."
+        );
+        _;
+    }
+
+    constructor(address _WCB) {
+        WCB = _WCB;
+    }
+
 
     function createVote(
         string memory _name,
@@ -83,7 +104,7 @@ contract VoteFactor {
         uint256 _start,
         uint256 _over,
         address _ds
-    ) external {
+    ) external WCBOnly{
         v = new Vote(_name, _addr, _amount, _start, _over, _ds);
         emit logVote(_name, _start, _over);
     }

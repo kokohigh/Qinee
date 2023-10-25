@@ -41,7 +41,10 @@ contract Collection {
     }
 
     modifier relevantOnly() {
-        require(msg.sender == owner || msg.sender == importer, "You are not relevant person.");
+        require(
+            msg.sender == owner || msg.sender == importer,
+            "You are not relevant person."
+        );
         _;
     }
 
@@ -52,16 +55,16 @@ contract Collection {
         return address(this).balance;
     }
 
-    function getAmount() external view relevantOnly returns(uint){
+    function getAmount() external view relevantOnly returns (uint) {
         return amount;
     }
 
-    function withdraw(uint _v) external ownerOnly{
+    function withdraw(uint _v) external ownerOnly {
         require(_v <= address(this).balance, "Insufficient balance.");
         owner.transfer(_v);
     }
 
-    function checkVersion() view external returns(address) {
+    function checkVersion() external view returns (address) {
         return VERSION;
     }
 }
@@ -77,11 +80,21 @@ contract CollectionFactor {
         uint amount
     );
 
+    modifier participantsOnly(address _ds) {
+        (bool success, bytes memory respond) = _ds.call(
+            abi.encodeWithSignature("checkParticipants(address)", msg.sender)
+        );
+        bool result = abi.decode(respond, (bool));
+        require(result, "Not Participants");
+        _;
+    }
+
     function createCollection(
         address _ex,
         address _im,
-        uint _amount
-    ) public payable {
+        uint _amount,
+        address _ds
+    ) public payable participantsOnly(_ds) {
         collection = new Collection(_ex, _im, _amount, VERSION);
         emit logCollection(collection, _ex, _im, _amount);
     }

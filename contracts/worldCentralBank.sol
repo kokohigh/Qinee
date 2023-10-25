@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
-import "./CentralBank.sol";
 import "./DataStorage.sol";
+import "./CentralBank.sol";
+import "./BusinessAccount.sol";
 import "./Vote.sol";
 
 //The contract of WCB
@@ -24,7 +25,16 @@ contract WorldCentralBank {
             "Already initialed the central bank."
         );
         CentralBankFactory(_CBFactory).creatCentralBank(msg.sender);
-        dataStorage.addMember(msg.sender);
+        dataStorage.addMember(msg.sender); //addMember?
+    }
+
+        function createBusinessAccount(address _BAFactory) external {
+        require(
+            dataStorage.checkMember(msg.sender) == false,
+            "Already initialed the central bank."
+        );
+        BusinessAccountFactory(_BAFactory).creatBusinessAccount(msg.sender);
+        dataStorage.addMember(msg.sender); //addMember
     }
 
     function creatVote(
@@ -43,8 +53,8 @@ contract WorldCentralBank {
         VoteFactor(_voteFactory).createVote(_name, _uaddr, _amount, _start, _over, _ds);
     }
 
-    function checkDataStoage() view external returns(address, DataStorage){
-        return (address(dataStorage), dataStorage);
+    function checkDataStoage() view external returns(address){
+        return address(dataStorage);
     }
 
     function checkCentralBank() view external returns (address){

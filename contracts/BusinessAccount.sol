@@ -7,11 +7,10 @@ import "./StandardFunctionsSet/LetterOfCredit.sol";
 import "./DataStorage.sol";
 
 //The contract of country's central bank
-contract CentralBank {
+contract BusinessAccount {
     address immutable Owner;
 
     event logCreateByCall(bool success, bytes data);
-    event logVoteSuccess(address _vote, bool success);
 
     modifier ownerOnly() {
         require(msg.sender == Owner, "Ownership is needed.");
@@ -19,7 +18,7 @@ contract CentralBank {
     }
 
     constructor(address _addr) {
-        Owner = _addr;
+        Owner = _addr; //好像可以利用代理调用直接取得msg.sender
     }
 
     function showOwner() external view returns (address) {
@@ -96,37 +95,15 @@ contract CentralBank {
         );
         emit logCreateByCall(success, data);
     }
-
-    function affirmativeVote(address _vote) external ownerOnly {
-        (bool success, ) = _vote.call(
-            abi.encodeWithSignature("affirmativeVote()")
-        );
-        emit logVoteSuccess(_vote, success);
-    }
-
-    function dissentingVote(address _vote) external ownerOnly {
-        (bool success, ) = _vote.call(
-            abi.encodeWithSignature("dissentingVote()")
-        );
-        emit logVoteSuccess(_vote, success);
-    }
-
-    function getVoteName(address _vote) external ownerOnly {}
-
-    // //我怀疑钱被卡在了这个合约， 用这个方法检查
-    // //？？？
-    // function getValue() external view returns(uint){
-    //     return address(this).balance;
-    // }
 }
 
-contract CentralBankFactory {
-    CentralBank centralbank;
+contract BusinessAccountFactory {
+    BusinessAccount businessAccount;
     DataStorage dataStorage;
     address WCB;
 
-    event logCentralBank(
-        CentralBank indexed centralbank,
+    event logBusinessAccount(
+        BusinessAccount indexed businessAccount,
         address indexed owner,
         uint timestamp
     );
@@ -136,7 +113,7 @@ contract CentralBankFactory {
             msg.sender == WCB,
             "please create central bank via World Central Bank."
         );
-        _; 
+        _; //todo
     }
 
     constructor(address _ds, address _wcb) {
@@ -144,9 +121,9 @@ contract CentralBankFactory {
         WCB = _wcb;
     }
 
-    function creatCentralBank(address _owner) public WCBOnly {
-        centralbank = new CentralBank(_owner);
-        dataStorage.addCentralBank(address(centralbank));
-        emit logCentralBank(centralbank, _owner, block.timestamp);
+    function creatBusinessAccount(address _owner) public WCBOnly {
+        businessAccount = new BusinessAccount(_owner);
+        dataStorage.addBusinessAccount(address(businessAccount));
+        emit logBusinessAccount(businessAccount, _owner, block.timestamp);
     }
 }

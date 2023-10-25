@@ -4,20 +4,24 @@ pragma solidity ^0.8.0;
 contract Remittance {
     address immutable FROM;
     address payable immutable TO;
-    address immutable internal version;
+    address internal immutable version;
 
     // 只有受益人可以提款
-    modifier beneficiaryOnly(){
+    modifier beneficiaryOnly() {
         require(msg.sender == TO, "Not beneficiary.");
         _;
     }
 
-    modifier relevantOnly(){
-        require(msg.sender == FROM|| msg.sender == TO, "Not relevant.");
+    modifier relevantOnly() {
+        require(msg.sender == FROM || msg.sender == TO, "Not relevant.");
         _;
     }
 
-    constructor(address _from, address _to, address _version) payable {
+    constructor(
+        address _from,
+        address _to,
+        address _version
+    ) payable {
         TO = payable(_to);
         FROM = _from;
         version = _version;
@@ -29,12 +33,12 @@ contract Remittance {
         return address(this).balance;
     }
 
-    function withdraw(uint _v) external beneficiaryOnly{
+    function withdraw(uint _v) external beneficiaryOnly {
         require(_v <= address(this).balance, "Insufficient balance.");
         TO.transfer(_v);
     }
 
-    function checkVersion() external view returns(address) {
+    function checkVersion() external view returns (address) {
         return version;
     }
 }
@@ -48,7 +52,20 @@ contract RemittanceFactor {
         address indexed receiver
     );
 
-    function createRemittance(address _from, address _to) public payable {
+    modifier participantsOnly(address _ds) {
+        (bool success, bytes memory respond) = _ds.call(
+            abi.encodeWithSignature("checkParticipants(address)", msg.sender)
+        );
+        bool result = abi.decode(respond, (bool));
+        require(result, "Not Participants");
+        _;
+    }
+
+    function createRemittance(
+        address _from,
+        address _to,
+        address _ds
+    ) public payable participantsOnly(_ds) {
         remittance = new Remittance{value: msg.value}(_from, _to, VERSION);
         emit logRemittance(remittance, _to);
     }
