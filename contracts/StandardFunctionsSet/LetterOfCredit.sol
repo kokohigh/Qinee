@@ -109,12 +109,22 @@ contract LetterOfCreditFactory {
         uint amount
     );
 
+    modifier participantsOnly(address _ds) {
+        (bool success, bytes memory respond) = (_ds).call(
+            abi.encodeWithSignature("checkParticipants(address)", msg.sender)
+        );
+        bool result = abi.decode(respond, (bool));
+        require(result, "Not Participants");
+        _;
+    }
+
     function createLetterOfCredit(
         address _ex,
         address _im,
         address _oracle,
-        uint _ddl
-    ) public payable {
+        uint _ddl,
+        address _ds
+    ) public payable participantsOnly(_ds){
         letterOfCredit = new LetterOfCredit{value: msg.value}(
             _ex,
             _im,

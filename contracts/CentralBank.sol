@@ -9,29 +9,49 @@ import "./DataStorage.sol";
 
 //The contract of country's central bank
 contract CentralBank {
+    string constant checkRemittance = "checkRemitance()";
+    string constant checkCollection = "checkCollection()";
+    string constant checkLOC = "checkLOC()";
+
     address immutable Owner;
+    address VC;
 
     event logCreateByCall(bool success, bytes data);
+    event logVoteSuccess(address _vote, bool success);
 
     modifier ownerOnly() {
         require(msg.sender == Owner, "Ownership is needed.");
         _;
     }
 
-    constructor(address _addr) {
-        Owner = _addr; //好像可以利用代理调用直接取得msg.sender
+    modifier newVersionOnly(address _factory, string memory _func) {
+        (bool success, bytes memory respond) = VC.call(
+            abi.encodeWithSignature(_func)
+        );
+        address factoryVersion = abi.decode(respond, (address));
+        require(_factory == factoryVersion, "Version deny.");
+        _;
+    }
+
+    constructor(address _addr, address _vc) {
+        Owner = _addr;
+        VC = _vc;
     }
 
     function showOwner() external view returns (address) {
         return Owner;
     }
 
-    function createRemittance(address _rem, address _to)
-        public
-        payable
-        ownerOnly
-    {
-        RemittanceFactory(_rem).createRemittance{value: msg.value}(Owner, _to);
+    function createRemittance(
+        address _rem,
+        address _to,
+        address _ds
+    ) public payable ownerOnly newVersionOnly(_rem, checkRemittance) {
+        RemittanceFactory(_rem).createRemittance{value: msg.value}(
+            Owner,
+            _to,
+            _ds
+        );
     }
 
     function createCollection(
@@ -39,7 +59,7 @@ contract CentralBank {
         address _im,
         uint _amount,
         address _ds
-    ) external payable ownerOnly {
+    ) external payable ownerOnly newVersionOnly(_coll, checkCollection) {
         CollectionFactory(_coll).createCollection{value: msg.value}(
             Owner,
             _im,
@@ -54,7 +74,7 @@ contract CentralBank {
         address _oracle,
         uint _ddl,
         address _ds
-    ) external payable ownerOnly {
+    ) external payable ownerOnly newVersionOnly(_loc, checkLOC) {
         LetterOfCreditFactory(_loc).createLetterOfCredit{value: msg.value}(
             _ex,
             Owner,
@@ -100,6 +120,22 @@ contract CentralBank {
         emit logCreateByCall(success, data);
     }
 
+    function affirmativeVote(address _vote) external ownerOnly {
+        (bool success, ) = _vote.call(
+            abi.encodeWithSignature("affirmativeVote()")
+        );
+        emit logVoteSuccess(_vote, success);
+    }
+
+    function dissentingVote(address _vote) external ownerOnly {
+        (bool success, ) = _vote.call(
+            abi.encodeWithSignature("dissentingVote()")
+        );
+        emit logVoteSuccess(_vote, success);
+    }
+
+    function getVoteName(address _vote) external ownerOnly {}
+
     // //我怀疑钱被卡在了这个合约， 用这个方法检查
     // //？？？
     // function getValue() external view returns(uint){
@@ -108,13 +144,10 @@ contract CentralBank {
 }
 
 contract CentralBankFactory {
-    VersionController VC;
     CentralBank centralbank;
     DataStorage dataStorage;
-
-    constructor(address _ds) {
-        dataStorage = DataStorage(_ds);
-    }
+    address WCB;
+    address VC;
 
     event logCentralBank(
         CentralBank indexed centralbank,
@@ -123,16 +156,36 @@ contract CentralBankFactory {
     );
 
     modifier WCBOnly() {
-        require(
-            msg.sender == WCB,
-            "please create central bank via World Central Bank."
-        );
+        require(WCB == msg.sender, "Please create central bank via WCB.");
         _;
     }
 
-    function creatCentralBank(address _owner) public WCBOnly{
-        centralbank = new CentralBank(_owner);
-        dataStorage.addCentralBank(centralbank);
+    // modifier OwnershipOnly(address _uaddr) {
+    //     require(dataStorage.checkOwner(_uaddr), "No permission to create central bank.");
+    //     _;
+    // }
+
+    constructor(
+        address _ds,
+        address _wcb,
+        address _vc
+    ) {
+        dataStorage = DataStorage(_ds);
+        WCB = _wcb;
+        VC = _vc;
+    }
+
+    function createCentralBank(address _owner) public WCBOnly {
+        centralbank = new CentralBank(_owner, VC);
+        dataStorage.addCentralBank(address(centralbank));
         emit logCentralBank(centralbank, _owner, block.timestamp);
+    }
+
+    function checkWCB() external view returns (address) {
+        return WCB;
+    }
+
+    function checkSender() external view returns (address) {
+        return msg.sender;
     }
 }

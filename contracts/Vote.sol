@@ -76,44 +76,29 @@ contract Vote {
 contract VoteFactory {
     Vote v;
     event logVote(string indexed name, uint256 startTime, uint256 overTime);
-<<<<<<< HEAD
-    VersionController VC;
+    address WCB;
 
     modifier WCBOnly() {
         require(
-            msg.sender == VC.checkWCB(),
+            msg.sender == WCB,
             "please create central bank via World Central Bank."
         );
         _;
     }
 
-    modifier validOnly() {
-        require(address(this) == VC.checkVote(), "Not Valid Version");
-        _;
+    constructor(address _WCB) {
+        WCB = _WCB;
     }
-
-    constructor(address _vc) {
-        VC = VersionController(_vc);
-    }
-
-=======
->>>>>>> parent of a18c593 (add version controller and business account)
 
     function createVote(
         string memory _name,
         address _addr, // user'address OR version'address
         uint _amount, // amount of currency, perpare for future.
         uint256 _start,
-<<<<<<< HEAD
-        uint256 _over
-    ) external WCBOnly validOnly{
-        v = new Vote(_name, _addr, _amount, _start, _over, VC.checkDS());
-=======
         uint256 _over,
         address _ds
     ) external {
         v = new Vote(_name, _addr, _amount, _start, _over, _ds);
->>>>>>> parent of a18c593 (add version controller and business account)
         emit logVote(_name, _start, _over);
     }
 }

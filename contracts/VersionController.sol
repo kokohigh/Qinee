@@ -21,6 +21,8 @@ contract VersionController {
     address internal collectionVersion;
     address internal voteVersion;
 
+    address VC = address(this);
+
     event logNoFactory(address ds, address WCB);
     event logFactory(
         address CBF,
@@ -32,6 +34,7 @@ contract VersionController {
     );
 
     constructor(address[] memory _owners) {
+        // 自动部署合约，并初始化版本
         dataStorageVersion = deployDS(_owners);
         WCBVersion = deployWCB();
         CBVersion = deployCBFactory();
@@ -40,6 +43,7 @@ contract VersionController {
         letterOfCreditVersion = deployLOCFactory();
         collectionVersion = deployCollectionFactory();
         voteVersion = deployVoteFactory();
+        // 打印各被部署合约的地址
         emit logNoFactory(dataStorageVersion, WCBVersion);
         emit logFactory(
             CBVersion,
@@ -52,17 +56,21 @@ contract VersionController {
     }
 
     function deployDS(address[] memory _owners) private returns (address) {
-        DataStorage ds = new DataStorage(_owners);
+        DataStorage ds = new DataStorage(_owners, WCBVersion);
         return address(ds);
     }
 
     function deployWCB() private returns (address) {
-        WorldCentralBank WCB = new WorldCentralBank(address(this));
+        WorldCentralBank WCB = new WorldCentralBank(dataStorageVersion, VC);
         return address(WCB);
     }
 
     function deployCBFactory() private returns (address) {
-        CentralBankFactory CBF = new CentralBankFactory(address(this));
+        CentralBankFactory CBF = new CentralBankFactory(
+            dataStorageVersion,
+            WCBVersion,
+            VC
+        );
         return address(CBF);
     }
 
@@ -75,7 +83,7 @@ contract VersionController {
     }
 
     function deployRemittanceFactory() private returns (address) {
-        RemittanceFactory RF = new RemittanceFactory(address(this));
+        RemittanceFactory RF = new RemittanceFactory();
         return address(RF);
     }
 
@@ -90,7 +98,7 @@ contract VersionController {
     }
 
     function deployVoteFactory() private returns (address) {
-        VoteFactory VF = new VoteFactory(address(this));
+        VoteFactory VF = new VoteFactory(WCBVersion);
         return address(VF);
     }
 

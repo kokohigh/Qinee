@@ -25,12 +25,12 @@ contract BusinessAccount {
         return Owner;
     }
 
-    function createRemittance(address _rem, address _to)
+    function createRemittance(address _rem, address _to, address _ds)
         public
         payable
         ownerOnly
     {
-        RemittanceFactory(_rem).createRemittance{value: msg.value}(Owner, _to);
+        RemittanceFactory(_rem).createRemittance{value: msg.value}(Owner, _to, _ds);
         //_wcb.transfer(address(this).address);
     }
 
@@ -115,9 +115,9 @@ contract BusinessAccountFactory {
     modifier WCBOnly() {
         require(
             msg.sender == WCB,
-            "please create central bank via World Central Bank."
+            "please create business account via World Central Bank."
         );
-        _; //todo
+        _; 
     }
 
     constructor(address _ds, address _wcb) {
@@ -125,7 +125,7 @@ contract BusinessAccountFactory {
         WCB = _wcb;
     }
 
-    function createBusinessAccount(address _owner) public WCBOnly {
+    function createBusinessAccount(address _owner) public WCBOnly{
         businessAccount = new BusinessAccount(_owner);
         dataStorage.addBusinessAccount(address(businessAccount));
         emit logBusinessAccount(businessAccount, _owner, block.timestamp);
