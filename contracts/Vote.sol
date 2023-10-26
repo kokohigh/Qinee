@@ -17,14 +17,12 @@ contract Vote {
         uint _amount, // amount of currency, perpare for future.(How much)
         uint256 _start, //投票的有效期(When)
         uint256 _over,
-        address _ds
+        address _dsAddr
     ) {
-        name = keccak256(
-            abi.encodePacked(_name, _addr, _amount, _start, _over)
-        );
+        name = keccak256(abi.encodePacked(_name, _addr, _amount,  _start, _over));
         startTime = _start;
         overTime = _over;
-        dataStorage = DataStorage(_ds);
+        dataStorage = DataStorage(_dsAddr);
     }
 
     //为投票设置有效期
@@ -44,17 +42,12 @@ contract Vote {
         _;
     }
 
-    modifier CBOnly(address _addr) {
-        require(dataStorage.checkCentralBank(_addr), "No Permission.");
-        _;
+    function affirmativeVote() external validatyOnly OwnerOnly {
+        voteStatus[msg.sender] = true;
     }
 
-    function affirmativeVote() external validatyOnly CBOnly(msg.sender) {
-        voteStatus[msg.sender] = true; //msg.sender 是一个CB的地址
-    }
-
-    function dissentingVote() external validatyOnly CBOnly(msg.sender) {
-        voteStatus[msg.sender] = false; //msg.sender 是一个CB的地址
+    function dissentingVote() external validatyOnly OwnerOnly {
+        voteStatus[msg.sender] = false;
     }
 
     //TODO 完成datastorage的重写后
@@ -83,6 +76,7 @@ contract Vote {
 contract VoteFactory {
     Vote v;
     event logVote(string indexed name, uint256 startTime, uint256 overTime);
+<<<<<<< HEAD
     VersionController VC;
 
     modifier WCBOnly() {
@@ -102,15 +96,24 @@ contract VoteFactory {
         VC = VersionController(_vc);
     }
 
+=======
+>>>>>>> parent of a18c593 (add version controller and business account)
 
     function createVote(
         string memory _name,
         address _addr, // user'address OR version'address
         uint _amount, // amount of currency, perpare for future.
         uint256 _start,
+<<<<<<< HEAD
         uint256 _over
     ) external WCBOnly validOnly{
         v = new Vote(_name, _addr, _amount, _start, _over, VC.checkDS());
+=======
+        uint256 _over,
+        address _ds
+    ) external {
+        v = new Vote(_name, _addr, _amount, _start, _over, _ds);
+>>>>>>> parent of a18c593 (add version controller and business account)
         emit logVote(_name, _start, _over);
     }
 }

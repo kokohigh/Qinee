@@ -5,24 +5,20 @@ import "../VersionController.sol";
 contract Remittance {
     address immutable FROM;
     address payable immutable TO;
-    address internal immutable version;
+    address immutable internal version;
 
     // 只有受益人可以提款
-    modifier beneficiaryOnly() {
+    modifier beneficiaryOnly(){
         require(msg.sender == TO, "Not beneficiary.");
         _;
     }
 
-    modifier relevantOnly() {
-        require(msg.sender == FROM || msg.sender == TO, "Not relevant.");
+    modifier relevantOnly(){
+        require(msg.sender == FROM|| msg.sender == TO, "Not relevant.");
         _;
     }
 
-    constructor(
-        address _from,
-        address _to,
-        address _version
-    ) payable {
+    constructor(address _from, address _to, address _version) payable {
         TO = payable(_to);
         FROM = _from;
         version = _version;
@@ -34,12 +30,12 @@ contract Remittance {
         return address(this).balance;
     }
 
-    function withdraw(uint _v) external beneficiaryOnly {
+    function withdraw(uint _v) external beneficiaryOnly{
         require(_v <= address(this).balance, "Insufficient balance.");
         TO.transfer(_v);
     }
 
-    function checkVersion() external view returns (address) {
+    function checkVersion() external view returns(address) {
         return version;
     }
 }
@@ -54,6 +50,7 @@ contract RemittanceFactory {
         address indexed receiver
     );
 
+<<<<<<< HEAD
     modifier participantsOnly() {
         (bool success, bytes memory respond) = (VC.checkDS()).call(
             abi.encodeWithSignature("checkParticipants(address)", msg.sender)
@@ -71,6 +68,9 @@ contract RemittanceFactory {
         address _from,
         address _to
     ) public payable participantsOnly() {
+=======
+    function createRemittance(address _from, address _to) public payable {
+>>>>>>> parent of a18c593 (add version controller and business account)
         remittance = new Remittance{value: msg.value}(_from, _to, VERSION);
         emit logRemittance(remittance, _to);
     }

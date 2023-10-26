@@ -31,16 +31,13 @@ contract LetterOfCredit {
         _;
     }
 
-    modifier ownerOnly() {
+    modifier ownerOnly(){
         require(msg.sender == owner, "No Permission");
         _;
     }
 
-    modifier relevantOnly() {
-        require(
-            msg.sender == exporter || msg.sender == owner,
-            "Not relevant person."
-        );
+    modifier relevantOnly(){
+        require(msg.sender == exporter || msg.sender == owner, "Not relevant person.");
         _;
     }
 
@@ -53,10 +50,7 @@ contract LetterOfCredit {
     }
 
     modifier unfinishOnly() {
-        require(
-            (block.timestamp > deadline) && (condition == false),
-            "Transaction is pedding"
-        );
+        require((block.timestamp > deadline) && (condition == false), "Transaction is pedding");
         _;
     }
 
@@ -73,7 +67,7 @@ contract LetterOfCredit {
     }
 
     // 延长DDL
-    function extendDeadline(uint256 _newTime) external ownerOnly {
+    function extendDeadline(uint256 _newTime) external ownerOnly{
         require(msg.sender == owner, "No permission.");
         require(_newTime > deadline, "Cannot shorten time.");
         deadline = _newTime;
@@ -86,7 +80,7 @@ contract LetterOfCredit {
     }
 
     //交易失败时，退款给进口商
-    function cancel() external ownerOnly unfinishOnly {
+    function cancel() external ownerOnly unfinishOnly{
         owner.transfer(address(this).balance);
     }
 
@@ -114,22 +108,13 @@ contract LetterOfCreditFactory {
         address _im,
         uint amount
     );
-    modifier participantsOnly(address _ds) {
-        (bool success, bytes memory respond) = _ds.call(
-            abi.encodeWithSignature("checkParticipants(address)", msg.sender)
-        );
-        bool result = abi.decode(respond, (bool));
-        require(result, "Not Participants");
-        _;
-    }
 
     function createLetterOfCredit(
         address _ex,
         address _im,
         address _oracle,
-        uint _ddl,
-        address _ds
-    ) public payable participantsOnly(_ds) {
+        uint _ddl
+    ) public payable {
         letterOfCredit = new LetterOfCredit{value: msg.value}(
             _ex,
             _im,

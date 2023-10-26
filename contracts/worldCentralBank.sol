@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
+<<<<<<< HEAD
 import "./VersionController.sol";
 import "./DataStorage.sol";
+=======
+>>>>>>> parent of a18c593 (add version controller and business account)
 import "./CentralBank.sol";
-import "./BusinessAccount.sol";
+import "./DataStorage.sol";
 import "./Vote.sol";
 
 //The contract of WCB
@@ -31,6 +34,7 @@ contract WorldCentralBank {
             dataStorage.checkOwner(msg.sender) == true,
             "Already initialed the central bank."
         );
+<<<<<<< HEAD
         CentralBankFactory(VC.checkCB()).createCentralBank(msg.sender);
         dataStorage.addMember(msg.sender); //addMember?
     }
@@ -42,6 +46,10 @@ contract WorldCentralBank {
         );
         BusinessAccountFactory(VC.checkBA()).createBusinessAccount(msg.sender);
         dataStorage.addMember(msg.sender); //addMember
+=======
+        CentralBankFactory(_CBFactory).creatCentralBank(msg.sender);
+        dataStorage.addMember(msg.sender);
+>>>>>>> parent of a18c593 (add version controller and business account)
     }
 
     function createVote(
@@ -58,8 +66,8 @@ contract WorldCentralBank {
         VoteFactory(VC.checkVote()).createVote(_name, _uaddr, _amount, _start, _over);
     }
 
-    function checkDataStoage() view external returns(address){
-        return address(dataStorage);
+    function checkDataStoage() view external returns(address, DataStorage){
+        return (address(dataStorage), dataStorage);
     }
 
     function checkCentralBank() view external returns (address){
