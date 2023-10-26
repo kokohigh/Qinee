@@ -30,19 +30,21 @@ contract BusinessAccount {
         payable
         ownerOnly
     {
-        RemittanceFactor(_rem).createRemittance{value: msg.value}(Owner, _to);
+        RemittanceFactory(_rem).createRemittance{value: msg.value}(Owner, _to);
         //_wcb.transfer(address(this).address);
     }
 
     function createCollection(
         address _coll,
         address _im,
-        uint _amount
+        uint _amount,
+        address _ds
     ) external payable ownerOnly {
-        CollectionFactor(_coll).createCollection{value: msg.value}(
+        CollectionFactory(_coll).createCollection{value: msg.value}(
             Owner,
             _im,
-            _amount
+            _amount,
+            _ds
         );
     }
 
@@ -50,13 +52,15 @@ contract BusinessAccount {
         address _loc,
         address _ex,
         address _oracle,
-        uint _ddl
+        uint _ddl,
+        address _ds
     ) external payable ownerOnly {
-        LetterOfCreditFactor(_loc).createLetterOfCredit{value: msg.value}(
+        LetterOfCreditFactory(_loc).createLetterOfCredit{value: msg.value}(
             _ex,
             Owner,
             _oracle,
-            _ddl
+            _ddl,
+            _ds
         );
     }
 
@@ -121,7 +125,7 @@ contract BusinessAccountFactory {
         WCB = _wcb;
     }
 
-    function creatBusinessAccount(address _owner) public WCBOnly {
+    function createBusinessAccount(address _owner) public WCBOnly {
         businessAccount = new BusinessAccount(_owner);
         dataStorage.addBusinessAccount(address(businessAccount));
         emit logBusinessAccount(businessAccount, _owner, block.timestamp);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
+import "../VersionController.sol";
 
 contract Remittance {
     address immutable FROM;
@@ -43,7 +44,8 @@ contract Remittance {
     }
 }
 
-contract RemittanceFactor {
+contract RemittanceFactory {
+    VersionController VC;
     Remittance remittance;
     address immutable VERSION = address(this); //这里是工厂的版本
 
@@ -52,8 +54,8 @@ contract RemittanceFactor {
         address indexed receiver
     );
 
-    modifier participantsOnly(address _ds) {
-        (bool success, bytes memory respond) = _ds.call(
+    modifier participantsOnly() {
+        (bool success, bytes memory respond) = (VC.checkDS()).call(
             abi.encodeWithSignature("checkParticipants(address)", msg.sender)
         );
         bool result = abi.decode(respond, (bool));
@@ -61,11 +63,14 @@ contract RemittanceFactor {
         _;
     }
 
+    constructor(address _vc){
+        VC = VersionController(_vc);
+    }
+
     function createRemittance(
         address _from,
-        address _to,
-        address _ds
-    ) public payable participantsOnly(_ds) {
+        address _to
+    ) public payable participantsOnly() {
         remittance = new Remittance{value: msg.value}(_from, _to, VERSION);
         emit logRemittance(remittance, _to);
     }

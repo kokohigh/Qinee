@@ -104,11 +104,11 @@ contract LetterOfCredit {
     }
 }
 
-contract LetterOfCreditFactor {
+contract LetterOfCreditFactory {
     LetterOfCredit letterOfCredit;
     address immutable VERSION = address(this); //工厂版本
 
-    event logLetterOfFactor(
+    event logLetterOfFactory(
         LetterOfCredit indexed letterOfCredit,
         address _ex,
         address _im,
@@ -137,6 +137,6 @@ contract LetterOfCreditFactor {
             _ddl,
             VERSION
         );
-        emit logLetterOfFactor(letterOfCredit, _ex, _im, msg.value);
+        emit logLetterOfFactory(letterOfCredit, _ex, _im, msg.value);
     }
 }

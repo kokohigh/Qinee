@@ -9,8 +9,7 @@ import "./StandardFunctionsSet/Remittance.sol";
 import "./StandardFunctionsSet/LetterOfCredit.sol";
 import "./StandardFunctionsSet/Collection.sol";
 
-contract VersionContraller{
-    
+contract VersionController {
     address dataStorageVersion;
     address WCBVersion;
 
@@ -22,66 +21,113 @@ contract VersionContraller{
     address internal collectionVersion;
     address internal voteVersion;
 
-    constructor(address[] memory _owners){      
+    event logNoFactory(address ds, address WCB);
+    event logFactory(
+        address CBF,
+        address BAF,
+        address RF,
+        address LCF,
+        address CF,
+        address VF
+    );
+
+    constructor(address[] memory _owners) {
         dataStorageVersion = deployDS(_owners);
         WCBVersion = deployWCB();
-        CBVersion = deployCBFactor();
-        BAVersion = deployBAFactor();
-        remitanceVersion = deployRemittanceFactor();
-        letterOfCreditVersion = deployLOCFactor();
-        collectionVersion = deployCollectionFactor();
-        voteVersion = deployVoteFactor();
-        
+        CBVersion = deployCBFactory();
+        BAVersion = deployBAFactory();
+        remitanceVersion = deployRemittanceFactory();
+        letterOfCreditVersion = deployLOCFactory();
+        collectionVersion = deployCollectionFactory();
+        voteVersion = deployVoteFactory();
+        emit logNoFactory(dataStorageVersion, WCBVersion);
+        emit logFactory(
+            CBVersion,
+            BAVersion,
+            remitanceVersion,
+            letterOfCreditVersion,
+            collectionVersion,
+            voteVersion
+        );
     }
 
-
-
-    function deployDS(address[] memory _owners) private returns (address){
+    function deployDS(address[] memory _owners) private returns (address) {
         DataStorage ds = new DataStorage(_owners);
         return address(ds);
-
     }
 
-    function deployWCB() private returns (address){
-        WorldCentralBank WCB = new WorldCentralBank(dataStorageVersion);
+    function deployWCB() private returns (address) {
+        WorldCentralBank WCB = new WorldCentralBank(address(this));
         return address(WCB);
     }
 
-    function deployCBFactor() private returns (address){
-        CentralBankFactory CBF = new CentralBankFactory(dataStorageVersion, WCBVersion);
+    function deployCBFactory() private returns (address) {
+        CentralBankFactory CBF = new CentralBankFactory(address(this));
         return address(CBF);
     }
 
-    function deployBAFactor() private returns (address){
-        BusinessAccountFactory BAF = new BusinessAccountFactory(dataStorageVersion, WCBVersion);
+    function deployBAFactory() private returns (address) {
+        BusinessAccountFactory BAF = new BusinessAccountFactory(
+            dataStorageVersion,
+            WCBVersion
+        );
         return address(BAF);
     }
 
-    function deployRemittanceFactor() private returns (address){
-        RemittanceFactor RF = new RemittanceFactor();
+    function deployRemittanceFactory() private returns (address) {
+        RemittanceFactory RF = new RemittanceFactory(address(this));
         return address(RF);
     }
 
-    function deployLOCFactor() private returns (address){
-        LetterOfCreditFactor LCF = new LetterOfCreditFactor();
+    function deployLOCFactory() private returns (address) {
+        LetterOfCreditFactory LCF = new LetterOfCreditFactory();
         return address(LCF);
     }
 
-    function deployCollectionFactor() private returns (address){
-        CollectionFactor CF = new CollectionFactor();
+    function deployCollectionFactory() private returns (address) {
+        CollectionFactory CF = new CollectionFactory();
         return address(CF);
     }
 
-    function deployVoteFactor() private returns (address){
-        VoteFactor VF = new VoteFactor(WCBVersion);
+    function deployVoteFactory() private returns (address) {
+        VoteFactory VF = new VoteFactory(address(this));
         return address(VF);
     }
 
-    function addVersion() external {
+    function addVersion() external {}
 
+    function updateVersion() external {}
+
+    function checkDS() external view returns (address) {
+        return dataStorageVersion;
     }
 
-    function updateVersion() external {
-
+    function checkWCB() external view returns (address) {
+        return WCBVersion;
     }
+
+    function checkCB() external view returns (address) {
+        return CBVersion;
+    }
+
+    function checkBA() external view returns (address) {
+        return BAVersion;
+    }
+
+    function checkRemittance() external view returns (address) {
+        return remitanceVersion;
+    }
+
+    function checkLOC() external view returns (address) {
+        return letterOfCreditVersion;
+    }
+
+    function checkCollection() external view returns (address) {
+        return collectionVersion;
+    }
+
+    function checkVote() external view returns (address) {
+        return voteVersion;
+    }
+    
 }

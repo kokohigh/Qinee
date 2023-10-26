@@ -69,7 +69,7 @@ contract Collection {
     }
 }
 
-contract CollectionFactor {
+contract CollectionFactory {
     Collection collection;
     address immutable VERSION = address(this); //工厂版本
 

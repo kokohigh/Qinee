@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
+import "./VersionController.sol";
 import "./DataStorage.sol";
 import "./CentralBank.sol";
 import "./BusinessAccount.sol";
@@ -8,10 +9,11 @@ import "./Vote.sol";
 
 //The contract of WCB
 contract WorldCentralBank {
+    VersionController VC;
     DataStorage dataStorage;
 
-    constructor(address _ds) {
-        dataStorage = DataStorage(_ds);
+    constructor(address _vc) {
+        VC = VersionController(_vc);
     }
 
     modifier membersOnly() {
@@ -19,38 +21,41 @@ contract WorldCentralBank {
         _;
     }
 
-    function createCentralBank(address _CBFactory) external {
+    function updateDS() external {
+        dataStorage = DataStorage(VC.checkDS()); // 自动装载DS
+    }
+
+    function createCentralBank() external {
         require(
-            dataStorage.checkMember(msg.sender) == false,
+            dataStorage.checkMember(msg.sender) == false ||
+            dataStorage.checkOwner(msg.sender) == true,
             "Already initialed the central bank."
         );
-        CentralBankFactory(_CBFactory).creatCentralBank(msg.sender);
+        CentralBankFactory(VC.checkCB()).createCentralBank(msg.sender);
         dataStorage.addMember(msg.sender); //addMember?
     }
 
-        function createBusinessAccount(address _BAFactory) external {
+        function createBusinessAccount() external {
         require(
             dataStorage.checkMember(msg.sender) == false,
             "Already initialed the central bank."
         );
-        BusinessAccountFactory(_BAFactory).creatBusinessAccount(msg.sender);
+        BusinessAccountFactory(VC.checkBA()).createBusinessAccount(msg.sender);
         dataStorage.addMember(msg.sender); //addMember
     }
 
-    function creatVote(
-        address _voteFactory,
+    function createVote(
         string memory _name,
         address _uaddr,
         uint256 _amount,
         uint256 _start,
-        uint256 _over,
-        address _ds
+        uint256 _over
     ) external {
         require(
             dataStorage.checkOwner(msg.sender),
             "You need Owner Permission."
         );
-        VoteFactor(_voteFactory).createVote(_name, _uaddr, _amount, _start, _over, _ds);
+        VoteFactory(VC.checkVote()).createVote(_name, _uaddr, _amount, _start, _over);
     }
 
     function checkDataStoage() view external returns(address){

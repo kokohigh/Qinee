@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./DataStorage.sol";
+import "./VersionController.sol";
 
 contract Vote {
     bytes32 name;
@@ -79,21 +80,26 @@ contract Vote {
     }
 }
 
-contract VoteFactor {
+contract VoteFactory {
     Vote v;
     event logVote(string indexed name, uint256 startTime, uint256 overTime);
-    address WCB;
+    VersionController VC;
 
     modifier WCBOnly() {
         require(
-            msg.sender == WCB,
+            msg.sender == VC.checkWCB(),
             "please create central bank via World Central Bank."
         );
         _;
     }
 
-    constructor(address _WCB) {
-        WCB = _WCB;
+    modifier validOnly() {
+        require(address(this) == VC.checkVote(), "Not Valid Version");
+        _;
+    }
+
+    constructor(address _vc) {
+        VC = VersionController(_vc);
     }
 
 
@@ -102,10 +108,9 @@ contract VoteFactor {
         address _addr, // user'address OR version'address
         uint _amount, // amount of currency, perpare for future.
         uint256 _start,
-        uint256 _over,
-        address _ds
-    ) external WCBOnly{
-        v = new Vote(_name, _addr, _amount, _start, _over, _ds);
+        uint256 _over
+    ) external WCBOnly validOnly{
+        v = new Vote(_name, _addr, _amount, _start, _over, VC.checkDS());
         emit logVote(_name, _start, _over);
     }
 }

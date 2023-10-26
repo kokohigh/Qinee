@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
+import "./VersionController.sol";
 import "./StandardFunctionsSet/Remittance.sol";
 import "./StandardFunctionsSet/Collection.sol";
 import "./StandardFunctionsSet/LetterOfCredit.sol";
@@ -31,19 +32,20 @@ contract CentralBank {
         payable
         ownerOnly
     {
-        RemittanceFactor(_rem).createRemittance{value: msg.value}(Owner, _to);
-        //_wcb.transfer(address(this).address);
+        RemittanceFactory(_rem).createRemittance{value: msg.value}(Owner, _to);
     }
 
     function createCollection(
         address _coll,
         address _im,
-        uint _amount
+        uint _amount,
+        address _ds
     ) external payable ownerOnly {
-        CollectionFactor(_coll).createCollection{value: msg.value}(
+        CollectionFactory(_coll).createCollection{value: msg.value}(
             Owner,
             _im,
-            _amount
+            _amount,
+            _ds
         );
     }
 
@@ -51,13 +53,15 @@ contract CentralBank {
         address _loc,
         address _ex,
         address _oracle,
-        uint _ddl
+        uint _ddl,
+        address _ds
     ) external payable ownerOnly {
-        LetterOfCreditFactor(_loc).createLetterOfCredit{value: msg.value}(
+        LetterOfCreditFactory(_loc).createLetterOfCredit{value: msg.value}(
             _ex,
             Owner,
             _oracle,
-            _ddl
+            _ddl,
+            _ds
         );
     }
 
@@ -121,9 +125,10 @@ contract CentralBank {
 }
 
 contract CentralBankFactory {
+    VersionController VC;
     CentralBank centralbank;
-    DataStorage dataStorage;
-    address WCB;
+    DataStorage dataStorage = DataStorage(VC.checkDS());
+    address WCB = VC.checkWCB();
 
     event logCentralBank(
         CentralBank indexed centralbank,
@@ -136,15 +141,14 @@ contract CentralBankFactory {
             msg.sender == WCB,
             "please create central bank via World Central Bank."
         );
-        _; 
+        _;
     }
 
-    constructor(address _ds, address _wcb) {
-        dataStorage = DataStorage(_ds);
-        WCB = _wcb;
+    constructor(address _vc) {
+        VC = VersionController(_vc);
     }
 
-    function creatCentralBank(address _owner) public WCBOnly {
+    function createCentralBank(address _owner) public WCBOnly {
         centralbank = new CentralBank(_owner);
         dataStorage.addCentralBank(address(centralbank));
         emit logCentralBank(centralbank, _owner, block.timestamp);
