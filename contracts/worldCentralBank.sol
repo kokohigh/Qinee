@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
+import "./DataStorage.sol";
 import "./CentralBank.sol";
 import "./BusinessAccount.sol";
-import "./DataStorage.sol";
 import "./Vote.sol";
 
 //The contract of WCB
@@ -22,23 +22,38 @@ contract WorldCentralBank {
     }
 
     modifier newCBFactoryOnly(address _CBFactory) {
-        (bool success, bytes memory respond) = VC.call(abi.encodeWithSignature("checkCB()"));
+        (bool success, bytes memory respond) = VC.call(
+            abi.encodeWithSignature("checkCB()")
+        );
         address CB = abi.decode(respond, (address));
         require(CB == _CBFactory, "Version deny.");
         _;
     }
 
     modifier newBAFactoryOnly(address _BAFactory) {
-        (bool success, bytes memory respond) = VC.call(abi.encodeWithSignature("checkBA()"));
+        (bool success, bytes memory respond) = VC.call(
+            abi.encodeWithSignature("checkBA()")
+        );
         address BA = abi.decode(respond, (address));
         require(BA == _BAFactory, "Version deny.");
         _;
     }
 
     modifier newVoteFactoryOnly(address _voteFactory) {
-        (bool success, bytes memory respond) = VC.call(abi.encodeWithSignature("checkVote()"));
+        (bool success, bytes memory respond) = VC.call(
+            abi.encodeWithSignature("checkVote()")
+        );
         address voteFactory = abi.decode(respond, (address));
         require(voteFactory == _voteFactory, "Version deny.");
+        _;
+    }
+
+    modifier noInstanceOnly(address _uaddr) {
+        (
+            dataStorage.checkHasCB(_uaddr) == address(0) &&
+                dataStorage.checkHasBA(_uaddr) == address(0),
+            "Already has instance."
+        );
         _;
     }
 
@@ -50,18 +65,23 @@ contract WorldCentralBank {
         dataStorage.addMember(_uaddr);
     }
 
-    function createCentralBank(address _CBFactory) external newCBFactoryOnly(_CBFactory){
-        require(
-            dataStorage.checkOwner(msg.sender) == true,
-            "Already initialed the central bank."
-        );
+    function createCentralBank(address _CBFactory)
+        external
+        newCBFactoryOnly(_CBFactory)
+        noInstanceOnly(msg.sender)
+    {
+        require(dataStorage.checkOwner(msg.sender) == true, "Need ownership.");
         CentralBankFactory(_CBFactory).createCentralBank(msg.sender);
     }
 
-    function createBusinessAccount(address _BAFactory) external newBAFactoryOnly(_BAFactory){
+    function createBusinessAccount(address _BAFactory)
+        external
+        newBAFactoryOnly(_BAFactory)
+        noInstanceOnly(msg.sender)
+    {
         require(
             dataStorage.checkMember(msg.sender) == true,
-            "Already initialed the central bank."
+            "Need membership."
         );
         BusinessAccountFactory(_BAFactory).createBusinessAccount(msg.sender);
     }
@@ -74,7 +94,7 @@ contract WorldCentralBank {
         uint256 _start,
         uint256 _over,
         address _ds
-    ) external newVoteFactoryOnly(_vote){
+    ) external newVoteFactoryOnly(_vote) {
         require(
             dataStorage.checkOwner(msg.sender),
             "You need Owner Permission."

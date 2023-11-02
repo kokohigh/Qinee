@@ -42,29 +42,26 @@ contract CentralBank {
         return Owner;
     }
 
+    //newVersionOnly(_rem, checkRemittance)
     function createRemittance(
         address _rem,
-        address _to,
-        address _ds
-    ) public payable ownerOnly newVersionOnly(_rem, checkRemittance) {
+        address _to
+    ) external payable ownerOnly  {
         RemittanceFactory(_rem).createRemittance{value: msg.value}(
             Owner,
-            _to,
-            _ds
+            _to
         );
     }
 
     function createCollection(
         address _coll,
         address _im,
-        uint _amount,
-        address _ds
+        uint _amount
     ) external payable ownerOnly newVersionOnly(_coll, checkCollection) {
         CollectionFactory(_coll).createCollection{value: msg.value}(
             Owner,
             _im,
-            _amount,
-            _ds
+            _amount
         );
     }
 
@@ -72,15 +69,13 @@ contract CentralBank {
         address _loc,
         address _ex,
         address _oracle,
-        uint _ddl,
-        address _ds
+        uint _ddl
     ) external payable ownerOnly newVersionOnly(_loc, checkLOC) {
         LetterOfCreditFactory(_loc).createLetterOfCredit{value: msg.value}(
             _ex,
             Owner,
             _oracle,
-            _ddl,
-            _ds
+            _ddl
         );
     }
 
@@ -177,7 +172,7 @@ contract CentralBankFactory {
 
     function createCentralBank(address _owner) public WCBOnly {
         centralbank = new CentralBank(_owner, VC);
-        dataStorage.addCentralBank(address(centralbank));
+        dataStorage.addCentralBank(address(centralbank), _owner);
         emit logCentralBank(centralbank, _owner, block.timestamp);
     }
 

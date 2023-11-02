@@ -14,23 +14,14 @@ contract DataStorage {
     address[] public members;
     mapping(address => bool) isMember;
 
-    //VersionController
-    //当前的WCB的地址,各种交易类型的版本
-    //mapping(address => bool) version;
-    //投票功能被作为单独的功能分离
-    //为每一个投票事件单独创建智能合约
-    //mapping(bytes32 => mapping(address => bool)) eventVotes;
-
     // 用来储存CBs和BAs
     address[] centralBanks;
-    mapping(address => address) hasCentralBank;
+    mapping(address => address) countryToCentralBank;
     address[] businessAccounts;
-    mapping(address => address) hasBusinessAccount;
+    mapping(address => address) countryToBusinessAccount;
 
     uint constant ZERO = 0;
     string constant ADDOWNER = "ADDOWNER";
-
-    //event logUpdateVersion(uint timestamp, address newVersion);
 
     constructor(address[] memory _owners, address _wcb) {
         for (uint16 i = 0; i < _owners.length; i++) {
@@ -100,25 +91,40 @@ contract DataStorage {
         return isMember[_uaddr];
     }
 
+    // 检查是不是Owner或Member
+    // function checkParticipants(address _addr) external view returns (bool) {
+    //     return isOwner[_addr] || isMember[_addr];
+    // }
+
     // 关于CB的方法
-    function addCentralBank(address _addr) external {
+    function addCentralBank(address _addr, address _owner) external {
         centralBanks.push(_addr);
+        countryToCentralBank[_owner] = _addr;
+        countryToCentralBank[_addr] = _owner;
     }
 
-    function addBusinessAccount(address _addr) external WCBOnly{
+    function addBusinessAccount(address _addr, address _owner)
+        external
+        WCBOnly
+    {
         centralBanks.push(_addr);
+        countryToBusinessAccount[_owner] = _addr;
+        countryToBusinessAccount[_addr] = _owner;
     }
 
-    //Version的方法
-    // function updateVersion(address _oldVersion, address _newVersion) external {
-    //     version[_newVersion] = true;
-    //     version[_oldVersion] = false;
-    //     emit logUpdateVersion(block.timestamp, _newVersion);
-    // }
+    function checkHasCB(address _uaddr) external view returns (address) {
+        return countryToCentralBank[_uaddr];
+    }
 
-    // function checkVersion(address _addr) external view returns (bool) {
-    //     return version[_addr];
-    // }
+    function checkHasBA(address _uaddr) external view returns (address) {
+        return countryToBusinessAccount[_uaddr];
+    }
+
+    function checkIsCBBA(address _uaddr) external view returns (bool isCBBA) {
+        isCBBA =
+            countryToBusinessAccount[_uaddr] != address(0) ||
+            countryToCentralBank[_uaddr] != address(0);
+    }
 
     function getCBAddr(uint _index) external view returns (address addr) {
         addr = members[_index];

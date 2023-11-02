@@ -101,6 +101,7 @@ contract LetterOfCredit {
 contract LetterOfCreditFactory {
     LetterOfCredit letterOfCredit;
     address immutable VERSION = address(this); //工厂版本
+    address DS;
 
     event logLetterOfFactory(
         LetterOfCredit indexed letterOfCredit,
@@ -109,8 +110,8 @@ contract LetterOfCreditFactory {
         uint amount
     );
 
-    modifier participantsOnly(address _ds) {
-        (bool success, bytes memory respond) = (_ds).call(
+    modifier participantsOnly() {
+        (bool success, bytes memory respond) = (DS).call(
             abi.encodeWithSignature("checkParticipants(address)", msg.sender)
         );
         bool result = abi.decode(respond, (bool));
@@ -118,13 +119,16 @@ contract LetterOfCreditFactory {
         _;
     }
 
+    constructor(address _ds) {
+        DS = _ds;
+    }
+
     function createLetterOfCredit(
         address _ex,
         address _im,
         address _oracle,
-        uint _ddl,
-        address _ds
-    ) public payable participantsOnly(_ds){
+        uint _ddl
+    ) public payable participantsOnly{
         letterOfCredit = new LetterOfCredit{value: msg.value}(
             _ex,
             _im,

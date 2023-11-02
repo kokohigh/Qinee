@@ -72,6 +72,7 @@ contract Collection {
 contract CollectionFactory {
     Collection collection;
     address immutable VERSION = address(this); //工厂版本
+    address DS;
 
     event logCollection(
         Collection indexed collection,
@@ -80,8 +81,8 @@ contract CollectionFactory {
         uint amount
     );
 
-    modifier participantsOnly(address _ds) {
-        (bool success, bytes memory respond) = (_ds).call(
+    modifier participantsOnly() {
+        (bool success, bytes memory respond) = (DS).call(
             abi.encodeWithSignature("checkParticipants(address)", msg.sender)
         );
         bool result = abi.decode(respond, (bool));
@@ -89,12 +90,15 @@ contract CollectionFactory {
         _;
     }
 
+    constructor(address _ds){
+        DS =_ds;
+    }
+
     function createCollection(
         address _ex,
         address _im,
-        uint _amount,
-        address _ds
-    ) public payable participantsOnly(_ds){
+        uint _amount
+    ) public payable participantsOnly(){
         collection = new Collection(_ex, _im, _amount, VERSION);
         emit logCollection(collection, _ex, _im, _amount);
     }

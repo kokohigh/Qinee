@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
-import "./Vote.sol";
+
 import "./DataStorage.sol";
 import "./WorldCentralBank.sol";
 import "./CentralBank.sol";
@@ -8,6 +8,7 @@ import "./BusinessAccount.sol";
 import "./StandardFunctionsSet/Remittance.sol";
 import "./StandardFunctionsSet/LetterOfCredit.sol";
 import "./StandardFunctionsSet/Collection.sol";
+import "./Vote.sol";
 
 contract VersionController {
     address dataStorageVersion;
@@ -16,9 +17,9 @@ contract VersionController {
     // 这些都是工厂
     address internal CBVersion;
     address internal BAVersion;
-    address internal remitanceVersion;
-    address internal letterOfCreditVersion;
-    address internal collectionVersion;
+    address payable internal remittanceVersion;
+    address payable internal letterOfCreditVersion;
+    address payable internal collectionVersion;
     address internal voteVersion;
 
     address VC = address(this);
@@ -39,16 +40,16 @@ contract VersionController {
         WCBVersion = deployWCB();
         CBVersion = deployCBFactory();
         BAVersion = deployBAFactory();
-        remitanceVersion = deployRemittanceFactory();
-        letterOfCreditVersion = deployLOCFactory();
-        collectionVersion = deployCollectionFactory();
+        remittanceVersion = payable(deployRemittanceFactory());
+        letterOfCreditVersion = payable(deployLOCFactory());
+        collectionVersion = payable(deployCollectionFactory());
         voteVersion = deployVoteFactory();
         // 打印各被部署合约的地址
         emit logNoFactory(dataStorageVersion, WCBVersion);
         emit logFactory(
             CBVersion,
             BAVersion,
-            remitanceVersion,
+            remittanceVersion,
             letterOfCreditVersion,
             collectionVersion,
             voteVersion
@@ -83,18 +84,18 @@ contract VersionController {
     }
 
     function deployRemittanceFactory() private returns (address) {
-        RemittanceFactory RF = new RemittanceFactory();
-        return address(RF);
+        RemittanceFactory RF = new RemittanceFactory(dataStorageVersion);
+        return payable(address(RF));
     }
 
     function deployLOCFactory() private returns (address) {
-        LetterOfCreditFactory LCF = new LetterOfCreditFactory();
-        return address(LCF);
+        LetterOfCreditFactory LCF = new LetterOfCreditFactory(dataStorageVersion);
+        return payable(address(LCF));
     }
 
     function deployCollectionFactory() private returns (address) {
-        CollectionFactory CF = new CollectionFactory();
-        return address(CF);
+        CollectionFactory CF = new CollectionFactory(dataStorageVersion);
+        return payable(address(CF));
     }
 
     function deployVoteFactory() private returns (address) {
@@ -123,7 +124,7 @@ contract VersionController {
     }
 
     function checkRemittance() external view returns (address) {
-        return remitanceVersion;
+        return remittanceVersion;
     }
 
     function checkLOC() external view returns (address) {

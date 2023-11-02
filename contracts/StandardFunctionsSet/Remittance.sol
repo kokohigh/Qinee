@@ -5,7 +5,7 @@ import "../VersionController.sol";
 contract Remittance {
     address immutable FROM;
     address payable immutable TO;
-    address internal immutable version;
+    address immutable internal version;
 
     // 只有受益人可以提款
     modifier beneficiaryOnly() {
@@ -29,15 +29,17 @@ contract Remittance {
     }
 
     receive() external payable {}
-    fallback() external payable{}
+
+    //fallback() external payable{}
 
     function getValue() external view relevantOnly returns (uint) {
         return address(this).balance;
     }
 
-    function withdraw(uint _v) external beneficiaryOnly {
-        require(_v <= address(this).balance, "Insufficient balance.");
-        TO.transfer(_v);
+    function withdraw() external beneficiaryOnly {
+        // require(_v <= address(this).balance, "Insufficient balance.");
+        // TO.transfer(_v);
+        TO.transfer(address(this).balance);
     }
 
     function checkVersion() external view returns (address) {
@@ -48,26 +50,40 @@ contract Remittance {
 contract RemittanceFactory {
     Remittance remittance;
     address immutable VERSION = address(this); //这里是工厂的版本
+    address DS;
 
     event logRemittance(
         Remittance indexed remittance,
         address indexed receiver
     );
 
-    modifier participantsOnly(address _ds) {
-        (bool success, bytes memory respond) = (_ds).call(
-            abi.encodeWithSignature("checkParticipants(address)", msg.sender)
-        );
-        bool result = abi.decode(respond, (bool));
-        require(result, "Not Participants");
-        _;
+    // modifier participantsOnly() {
+    //     (bool success, bytes memory respond) = (DS).call(
+    //         abi.encodeWithSignature("checkParticipants(address)", msg.sender)
+    //     );
+    //     bool result = abi.decode(respond, (bool));
+    //     require(result, "Not Participants");
+    //     _;
+    // }
+
+    // modifier CBBAOnly() {
+    //     (bool success, bytes memory respond) = (DS).call(
+    //         abi.encodeWithSignature("checkIsCBBA(address)", msg.sender)
+    //     );
+    //     bool result = abi.decode(respond, (bool));
+    //     require(result, "Not Participants");
+    //     _;
+    // }
+
+
+    constructor(address _ds) {
+        DS = _ds;
     }
 
     function createRemittance(
         address _from,
-        address _to,
-        address _ds
-    ) public payable participantsOnly(_ds) {
+        address _to
+    ) public payable { //CBBAOnly
         remittance = new Remittance{value: msg.value}(_from, _to, VERSION);
         emit logRemittance(remittance, _to);
     }

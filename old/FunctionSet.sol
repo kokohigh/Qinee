@@ -1,61 +1,61 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-//The contract of LoC
-contract LetterOfCredit{
+// //The contract of LoC
+// contract LetterOfCredit{
 
-    address IMPORTER;
-    address EXPORTER;
+//     address IMPORTER;
+//     address EXPORTER;
 
-    constructor(){
+//     constructor(){
 
-    }
+//     }
 
-    function LoC() external pure returns(uint){
-        return 0;
-    }
-}
+//     function LoC() external pure returns(uint){
+//         return 0;
+//     }
+// }
 
-// The contract of Collection
-contract Collection{
+// // The contract of Collection
+// contract Collection{
 
-    address IMPORTER;
-    address EXPORTER;
+//     address IMPORTER;
+//     address EXPORTER;
 
-    constructor(){
+//     constructor(){
         
-    }
+//     }
 
-    modifier exporterOnly(){
-        require(msg.sender == EXPORTER, "Permission Denied.");
-        _;
-    }
+//     modifier exporterOnly(){
+//         require(msg.sender == EXPORTER, "Permission Denied.");
+//         _;
+//     }
 
-    function collection() external pure returns(uint){
-        return 0;
+//     function collection() external pure returns(uint){
+//         return 0;
 
-    }
-}
+//     }
+// }
 
-// The contract of Remittance
-contract Remittance{
+// // The contract of Remittance
+// contract Remittance{
 
-    address payable TO;
+//     address payable TO;
 
-    constructor(address _to) payable{
+//     constructor(address _to) payable{
 
-        TO = payable(_to);
-    }
+//         TO = payable(_to);
+//     }
 
-    receive() external payable{}
+//     receive() external payable{}
 
-    function getValue() external view returns(uint){
-        return address(this).balance;
-    }
+//     function getValue() external view returns(uint){
+//         return address(this).balance;
+//     }
 
-    function withdraw(uint _v) external {
-        require(_v <= address(this).balance,"Insufficient balance.");
-        TO.transfer(_v);
-    }
+//     function withdraw(uint _v) external {
+//         require(_v <= address(this).balance,"Insufficient balance.");
+//         TO.transfer(_v);
+//     }
 
-}
+// }
