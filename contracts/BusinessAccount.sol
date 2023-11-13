@@ -121,7 +121,7 @@ contract BusinessAccountFactory {
         WCB = _wcb;
     }
 
-    function createBusinessAccount(address _owner) public WCBOnly{
+    function createBusinessAccount(address _owner) public {
         businessAccount = new BusinessAccount(_owner);
         dataStorage.addBusinessAccount(address(businessAccount), _owner);
         emit logBusinessAccount(businessAccount, _owner, block.timestamp);

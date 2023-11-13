@@ -170,7 +170,7 @@ contract CentralBankFactory {
         VC = _vc;
     }
 
-    function createCentralBank(address _owner) public WCBOnly {
+    function createCentralBank(address _owner) public WCBOnly{
         centralbank = new CentralBank(_owner, VC);
         dataStorage.addCentralBank(address(centralbank), _owner);
         emit logCentralBank(centralbank, _owner, block.timestamp);

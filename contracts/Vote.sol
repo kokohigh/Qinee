@@ -12,12 +12,17 @@ contract Vote {
     DataStorage dataStorage;
 
     constructor(
+        // 用纯大写来表示事件类型
+        // ADDVERSION
+        // UPDATEVERSION
+        // ADDOWNER
+        // ADDMEMBER
         string memory _name, // 各种事件类型(What)
         address _addr, // user'address OR version'address(Who)
         uint _amount, // amount of currency, perpare for future.(How much)
-        uint256 _start, //投票的有效期(When)
-        uint256 _over,
-        address _dsAddr
+        uint256 _start, //投票的有效期(When)开始时刻
+        uint256 _over, //投票的结束时刻
+        address _dsAddr //用于检查是否通过的data storage
     ) {
         name = keccak256(abi.encodePacked(_name, _addr, _amount,  _start, _over));
         startTime = _start;
@@ -75,30 +80,31 @@ contract Vote {
 
 contract VoteFactory {
     Vote v;
-    event logVote(string indexed name, uint256 startTime, uint256 overTime);
+    event logVote(address vote, uint256 startTime, uint256 overTime);
     address WCB;
+    address DS;
 
     modifier WCBOnly() {
         require(
             msg.sender == WCB,
-            "please create central bank via World Central Bank."
+            "please create vote via World Central Bank."
         );
         _;
     }
 
-    constructor(address _WCB) {
+    constructor(address _WCB, address _ds) {
         WCB = _WCB;
+        DS = _ds;
     }
 
     function createVote(
-        string memory _name,
+        string memory _name, // UPDATEVERSION 
         address _addr, // user'address OR version'address
         uint _amount, // amount of currency, perpare for future.
         uint256 _start,
-        uint256 _over,
-        address _ds
+        uint256 _over
     ) external {
-        v = new Vote(_name, _addr, _amount, _start, _over, _ds);
-        emit logVote(_name, _start, _over);
+        v = new Vote(_name, _addr, _amount, _start, _over, DS);
+        emit logVote(address(v), _start, _over);
     }
 }

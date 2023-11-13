@@ -20,7 +20,7 @@ contract VersionController {
     address payable internal remittanceVersion;
     address payable internal letterOfCreditVersion;
     address payable internal collectionVersion;
-    address internal voteVersion;
+    address internal voteVersion; 
 
     address VC = address(this);
 
@@ -54,6 +54,13 @@ contract VersionController {
             collectionVersion,
             voteVersion
         );
+    }
+
+    modifier passOnly(address _vote){
+        (bool success, bytes memory respond) = _vote.call(abi.encodeWithSignature("checkPaa()"));
+        bool result = abi.decode(respond,(bool));
+        require(result == true, "Vote did not pass.");
+        _;
     }
 
     function deployDS(address[] memory _owners) private returns (address) {
@@ -99,13 +106,15 @@ contract VersionController {
     }
 
     function deployVoteFactory() private returns (address) {
-        VoteFactory VF = new VoteFactory(WCBVersion);
+        VoteFactory VF = new VoteFactory(WCBVersion,dataStorageVersion);
         return address(VF);
     }
 
     function addVersion() external {}
 
-    function updateVersion() external {}
+    function updateVersion(address _newVersion, address _vote) external passOnly(_vote){
+
+    }
 
     function checkDS() external view returns (address) {
         return dataStorageVersion;

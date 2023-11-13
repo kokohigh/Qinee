@@ -92,8 +92,7 @@ contract WorldCentralBank {
         address _uaddr,
         uint256 _amount,
         uint256 _start,
-        uint256 _over,
-        address _ds
+        uint256 _over
     ) external newVoteFactoryOnly(_vote) {
         require(
             dataStorage.checkOwner(msg.sender),
@@ -104,8 +103,7 @@ contract WorldCentralBank {
             _uaddr,
             _amount,
             _start,
-            _over,
-            _ds
+            _over
         );
     }
 

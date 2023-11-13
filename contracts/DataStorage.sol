@@ -97,7 +97,7 @@ contract DataStorage {
     // }
 
     // 关于CB的方法
-    function addCentralBank(address _addr, address _owner) external {
+    function addCentralBank(address _addr, address _owner) external { //WCBOnly
         centralBanks.push(_addr);
         countryToCentralBank[_owner] = _addr;
         countryToCentralBank[_addr] = _owner;
@@ -105,7 +105,6 @@ contract DataStorage {
 
     function addBusinessAccount(address _addr, address _owner)
         external
-        WCBOnly
     {
         centralBanks.push(_addr);
         countryToBusinessAccount[_owner] = _addr;
