@@ -5,16 +5,16 @@ import "./DataStorage.sol";
 import "./VersionController.sol";
 
 contract Vote {
-    bytes32 name;
-    uint256 startTime;
-    uint256 overTime;
+    bytes32 internal name;
+    uint256 internal startTime;
+    uint256 internal overTime;
     mapping(address => bool) voteStatus;
     DataStorage dataStorage;
 
     constructor(
         // 用纯大写来表示事件类型
         // ADDVERSION
-        // UPDATEVERSION
+        // ADDSFSVERSION
         // ADDOWNER
         // ADDMEMBER
         string memory _name, // 各种事件类型(What)
@@ -39,6 +39,11 @@ contract Vote {
         _;
     }
 
+    modifier voteOverOnly(){
+        require(block.timestamp > overTime, "Voting in progress.");
+        _;
+    }
+
     modifier OwnerOnly() {
         require(
             dataStorage.checkOwner(msg.sender),
@@ -47,16 +52,21 @@ contract Vote {
         _;
     }
 
-    function affirmativeVote() external validatyOnly OwnerOnly {
+    modifier CBOnly() {
+        require(dataStorage.checkIsCB(msg.sender), "Please vote via central bank.");
+        _;
+    }
+
+    function affirmativeVote() external validatyOnly CBOnly {
         voteStatus[msg.sender] = true;
     }
 
-    function dissentingVote() external validatyOnly OwnerOnly {
+    function dissentingVote() external validatyOnly CBOnly {
         voteStatus[msg.sender] = false;
     }
 
     //TODO 完成datastorage的重写后
-    function checkPass() external view returns (bool) {
+    function checkPass() external view voteOverOnly returns (bool) {
         uint approval = 0;
         uint Length = 0;
         Length = dataStorage.getCBLength();
@@ -81,8 +91,8 @@ contract Vote {
 contract VoteFactory {
     Vote v;
     event logVote(address vote, uint256 startTime, uint256 overTime);
-    address WCB;
-    address DS;
+    address public WCB;
+    address public DS;
 
     modifier WCBOnly() {
         require(

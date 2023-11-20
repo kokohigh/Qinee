@@ -4,14 +4,15 @@ import "./CentralBank.sol";
 import "./Vote.sol";
 
 contract DataStorage {
-    address WCB;
+    address public WCB;
+    address public VC;
 
     // Ownership既可以生成交易，也可以参与决策
     address[] internal owners;
     mapping(address => bool) isOwner;
 
     // Membership仅可以生成交易，不可以参与决策
-    address[] public members;
+    address[] internal members;
     mapping(address => bool) isMember;
 
     // 用来储存CBs和BAs
@@ -20,15 +21,13 @@ contract DataStorage {
     address[] businessAccounts;
     mapping(address => address) countryToBusinessAccount;
 
-    uint constant ZERO = 0;
-    string constant ADDOWNER = "ADDOWNER";
-
-    constructor(address[] memory _owners, address _wcb) {
+    constructor(address[] memory _owners, address _vc) {
         for (uint16 i = 0; i < _owners.length; i++) {
             owners.push(_owners[i]);
             isOwner[_owners[i]] = true;
         }
-        WCB = _wcb;
+        VC = _vc;
+
     }
 
     modifier ownersOnly() {
@@ -37,40 +36,18 @@ contract DataStorage {
     }
 
     modifier WCBOnly() {
-        require(msg.sender == WCB, "Please Call it via WCB.");
+        require(WCB == msg.sender, "Please Call it via WCB.");
         _;
     }
 
-    modifier passOnly(
-        address _vote,
-        string memory _name,
-        address _addr,
-        uint _amount,
-        uint _start,
-        uint _over
-    ) {
-        Vote vote = Vote(_vote);
-        require(
-            vote.getName() ==
-                keccak256(
-                    abi.encodePacked(_name, _addr, _amount, _start, _over)
-                ),
-            "Not this proposal."
-        );
-        require(vote.checkPass(), "Not pass.");
-        _;
+    function getWCB() external {
+        (, bytes memory respond) = VC.call(abi.encodeWithSignature("checkWCB()"));
+        WCB = abi.decode(respond, (address));
     }
 
-    //Ownership的方法
-    // function addOwner(
-    //     address _voteAddr,
-    //     address _addr,
-    //     uint _start,
-    //     uint _over
-    // ) external passOnly(_voteAddr, ADDOWNER, _addr, ZERO , _start, _over) {
-    //     owners.push(_addr);
-    // }
-    function addOwner(address _uaddr) external {
+    function addOwner(
+        address _uaddr
+    ) external WCBOnly {
         owners.push(_uaddr);
         isOwner[_uaddr] = true;
     }
@@ -82,7 +59,7 @@ contract DataStorage {
     }
 
     // 关于member的方法
-    function addMember(address _uaddr) external {
+    function addMember(address _uaddr) external WCBOnly{
         members.push(_uaddr);
         isMember[_uaddr] = true;
     }
@@ -97,15 +74,15 @@ contract DataStorage {
     // }
 
     // 关于CB的方法
-    function addCentralBank(address _addr, address _owner) external { //WCBOnly
+    function addCentralBank(address _addr, address _owner) external {
+        // 这里的控制器应该是最新的CBFactory
         centralBanks.push(_addr);
         countryToCentralBank[_owner] = _addr;
         countryToCentralBank[_addr] = _owner;
     }
 
-    function addBusinessAccount(address _addr, address _owner)
-        external
-    {
+    function addBusinessAccount(address _addr, address _owner) external {
+        // 这里的控制器应该是最新的BAFactory
         centralBanks.push(_addr);
         countryToBusinessAccount[_owner] = _addr;
         countryToBusinessAccount[_addr] = _owner;
@@ -125,11 +102,20 @@ contract DataStorage {
             countryToCentralBank[_uaddr] != address(0);
     }
 
+    function checkIsCB(address _addr) external view returns (bool isCB) {
+        isCB = (countryToCentralBank[_addr] != address(0) &&
+            isOwner[_addr] != true);
+    }
+
     function getCBAddr(uint _index) external view returns (address addr) {
-        addr = members[_index];
+        addr = centralBanks[_index];
     }
 
     function getCBLength() external view returns (uint) {
-        return members.length;
+        return centralBanks.length;
+    }
+
+    function checkSender() external view returns (address user){
+        user = msg.sender;
     }
 }

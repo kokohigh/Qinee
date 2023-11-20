@@ -11,8 +11,10 @@ import "./StandardFunctionsSet/Collection.sol";
 import "./Vote.sol";
 
 contract VersionController2 {
-    string updateVersionEvent = "UPDATEVERSION";
-    
+    uint constant ZERO = 0;
+    string constant UPDATEVERSION = "UPDATEVERSION";
+    string constant UPDATESFSVERSION = "UPDATESFSVERSION";
+
     // 这些都是工厂
     mapping(string => address) versions;
     mapping(string => address payable) SFSVersions;
@@ -52,31 +54,51 @@ contract VersionController2 {
     }
 
     modifier passOnly(
+        address _vote,
         string memory _name,
-        address _newVersion,
+        address _addr,
         uint _amount,
-        uint256 _start,
-        uint256 _over,
-        address _vote
+        uint _start,
+        uint _over
     ) {
-        {bytes32 name = keccak256(
-            abi.encodePacked(_name, _newVersion, _amount, _start, _over)
+        Vote vote = Vote(_vote);
+        require(
+            vote.getName() ==
+                keccak256(
+                    abi.encodePacked(_name, _addr, _amount, _start, _over)
+                ),
+            "Not this proposal."
         );
-        (bool success, bytes memory respond) = _vote.call(
-            abi.encodeWithSignature("getName()")
-        );
-        bytes32 name1 = abi.decode(respond, (bytes32));
-        require(name == name1, "Not correspond vote.");}
-        (bool success1, bytes memory respond1) = _vote.call(
-            abi.encodeWithSignature("checkPass()")
-        );
-        bool result = abi.decode(respond1, (bool));
-        require(result == true, "Vote did not pass.");
+        require(vote.checkPass(), "Not pass.");
         _;
     }
 
+    // modifier passOnly(
+    //     string memory _name,
+    //     address _newVersion,
+    //     uint _amount,
+    //     uint256 _start,
+    //     uint256 _over,
+    //     address _vote
+    // ) {
+    //     {bytes32 name = keccak256(
+    //         abi.encodePacked(_name, _newVersion, _amount, _start, _over)
+    //     );
+    //     (bool success, bytes memory respond) = _vote.call(
+    //         abi.encodeWithSignature("getName()")
+    //     );
+    //     bytes32 name1 = abi.decode(respond, (bytes32));
+    //     require(name == name1, "Not correspond vote.");}
+    //     (bool success1, bytes memory respond1) = _vote.call(
+    //         abi.encodeWithSignature("checkPass()")
+    //     );
+    //     bool result = abi.decode(respond1, (bool));
+    //     require(result == true, "Vote did not pass.");
+    //     _;
+    // }
+
     function deployDS(address[] memory _owners) private returns (address) {
-        DataStorage ds = new DataStorage(_owners, versions["WCBVersion"]);
+        DataStorage ds = new DataStorage(_owners, VC);
         return address(ds);
     }
 
@@ -137,26 +159,27 @@ contract VersionController2 {
     //function addVersion(string memory _name, address _newVersion, address _vote) external passOnly(_vote){}
 
     function updateVersion(
+        address _vote,
         string memory _name,
         address _newVersion,
-        address _vote,
-        uint256 _start,
-        uint256 _over
+        uint _start,
+        uint _over
     )
         external
-        passOnly(updateVersionEvent, _newVersion, 0, _start, _over, _vote)
+        passOnly(_vote, UPDATEVERSION, _newVersion, ZERO, _start, _over)
     {
         versions[_name] = _newVersion;
     }
 
     function updateSFSVersion(
+        address _vote,
         string memory _name,
         address _newVersion,
-        address _vote,
-        uint256 _start,
-        uint256 _over
-    ) external 
-      passOnly(updateVersionEvent, _newVersion, 0, _start, _over, _vote) 
+        uint _start,
+        uint _over
+    )
+        external
+        passOnly(_vote, UPDATESFSVERSION, _newVersion, ZERO, _start, _over)
     {
         SFSVersions[_name] = payable(_newVersion);
     }

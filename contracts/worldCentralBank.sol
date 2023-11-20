@@ -7,6 +7,10 @@ import "./Vote.sol";
 
 //The contract of WCB
 contract WorldCentralBank {
+    uint constant ZERO = 0;
+    string constant ADDOWNER = "ADDOWNER";
+    string constant ADDMEMBER = "ADDMEMBER";
+
     // 数据储存
     DataStorage dataStorage;
     address VC;
@@ -14,6 +18,11 @@ contract WorldCentralBank {
     constructor(address _ds, address _vc) {
         dataStorage = DataStorage(_ds);
         VC = _vc;
+    }
+
+    modifier ownerOnly() {
+        require(dataStorage.checkOwner(msg.sender), "Ownership is needed.");
+        _;
     }
 
     modifier membersOnly() {
@@ -48,6 +57,26 @@ contract WorldCentralBank {
         _;
     }
 
+    modifier passOnly(
+        address _vote,
+        string memory _name,
+        address _addr,
+        uint _amount,
+        uint _start,
+        uint _over
+    ) {
+        Vote vote = Vote(_vote);
+        require(
+            vote.getName() ==
+                keccak256(
+                    abi.encodePacked(_name, _addr, _amount, _start, _over)
+                ),
+            "Not this proposal."
+        );
+        require(vote.checkPass(), "Not pass.");
+        _;
+    }
+
     modifier noInstanceOnly(address _uaddr) {
         (
             dataStorage.checkHasCB(_uaddr) == address(0) &&
@@ -57,32 +86,56 @@ contract WorldCentralBank {
         _;
     }
 
-    function addOwner(address _uaddr) external {
+    function addOwner(
+        address _uaddr,
+        address _vote,
+        uint _start,
+        uint _over
+    )
+        external
+        ownerOnly
+        passOnly(_vote, ADDOWNER, _uaddr, ZERO, _start, _over)
+    {
         dataStorage.addOwner(_uaddr);
     }
 
-    function addMember(address _uaddr) external {
+    function addMember(
+        address _uaddr,
+        address _vote,
+        uint _start,
+        uint _over
+    )
+        external
+        ownerOnly
+        passOnly(_vote, ADDMEMBER, _uaddr, ZERO, _start, _over)
+    {
         dataStorage.addMember(_uaddr);
+    }
+
+    function checkSender() external view returns (address user){
+        user = dataStorage.checkSender();
     }
 
     function createCentralBank(address _CBFactory)
         external
+        ownerOnly
         newCBFactoryOnly(_CBFactory)
         noInstanceOnly(msg.sender)
     {
-        require(dataStorage.checkOwner(msg.sender) == true, "Need ownership.");
+        // require(dataStorage.checkOwner(msg.sender) == true, "Need ownership.");
         CentralBankFactory(_CBFactory).createCentralBank(msg.sender);
     }
 
     function createBusinessAccount(address _BAFactory)
         external
+        membersOnly
         newBAFactoryOnly(_BAFactory)
         noInstanceOnly(msg.sender)
     {
-        require(
-            dataStorage.checkMember(msg.sender) == true,
-            "Need membership."
-        );
+        // require(
+        //     dataStorage.checkMember(msg.sender) == true,
+        //     "Need membership."
+        // );
         BusinessAccountFactory(_BAFactory).createBusinessAccount(msg.sender);
     }
 
@@ -93,18 +146,12 @@ contract WorldCentralBank {
         uint256 _amount,
         uint256 _start,
         uint256 _over
-    ) external newVoteFactoryOnly(_vote) {
-        require(
-            dataStorage.checkOwner(msg.sender),
-            "You need Owner Permission."
-        );
-        VoteFactory(_vote).createVote(
-            _name,
-            _uaddr,
-            _amount,
-            _start,
-            _over
-        );
+    ) external ownerOnly newVoteFactoryOnly(_vote) {
+        // require(
+        //     dataStorage.checkOwner(msg.sender),
+        //     "You need Owner Permission."
+        // );
+        VoteFactory(_vote).createVote(_name, _uaddr, _amount, _start, _over);
     }
 
     function checkDataStoage() external view returns (address) {
